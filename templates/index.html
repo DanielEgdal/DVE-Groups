@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>DVE Groups</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
    <h1>DVE Group app</h1>
    <p>To generate a token in order to unlock extra features (check-in list for newcomers, updating groups for other APPs) open
     <a href="https://www.worldcubeassociation.org/oauth/authorize?client_id=8xB-6U1fFcZ9PAy80pALi9E7nzfoF44W4cMPyIUXrgY&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fshow_token&response_type=token&scope=manage_competitions+public" target="_blank">this page</a> 
@@ -15,12 +11,7 @@
         <p><input type = "submit" value = "Submit access token" /></p>
     </form>
 
-    <form action="/playground" method="POST"
+    <form action="/playground" method="GET"
         <p><input type = "submit" value = "Go to playground without access token" /></p>
     </form>
-
-    <div class="alert alert-block alert-info">
-        There are at two strong outliers in the data. Try to remove them and see how that changes the classification results.
-        </div>
-</body>
-</html>
+{% endblock %}

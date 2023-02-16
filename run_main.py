@@ -43,7 +43,13 @@ def callAll(data,stations,stages=None,differentColours=False,mixed={},fixed=Fals
 
     compPatches = compCards(schedule,people,mixed=mixed)
     reglist = getRegList(people)
-    return pdfOvierview
+    
     scorecardCSV= CSVForScorecards(schedule,people,combined)
-    timelimitCSV = CSVForTimeLimits(schedule,people,combined)
-    # genScorecards(groups,tls,compname,no_stages,am_stages,sort_by_name)
+    timelimitCSV = CSVForTimeLimits(schedule,combined)
+    no_stages = 1 if not stages else stages
+    file_extension = 'pdf' if no_stages == 1 else 'zip'
+    per_stage = int(stations/no_stages)
+    per_stage +=1 # BEcause Anker be buggy
+    scorecards = genScorecards(scorecardCSV,timelimitCSV,name,no_stages,per_stage,False) # Check the order of these stage arguments
+    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}Scorecards.{file_extension}",scorecards)]
+    # return pdfOvierview

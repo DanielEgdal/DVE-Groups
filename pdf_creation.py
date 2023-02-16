@@ -162,7 +162,7 @@ def makePDFOverview(scheduleInfo):
                 
                 
     # pdf.output(outfile)
-    return pdf
+    return pdf.output(dest='b')
 
 def shortenName(name):
     while len(name) > 26:
@@ -307,7 +307,7 @@ def compCards(scheduleInfo,personInfo,mixed={}):
         progress +=3
 
     # pdf.output(outfile)
-    return pdf
+    return pdf.output(dest='b')
 
 def getRegList(personInfo):
     pdf = FPDF()
@@ -337,4 +337,4 @@ def getRegList(personInfo):
             pdf.multi_cell(40,line_height,'Postnummer:     ',border=1, ln=3)
         pdf.ln(line_height)
     # pdf.output(outfile)
-    return pdf
+    return pdf.output(dest='b')

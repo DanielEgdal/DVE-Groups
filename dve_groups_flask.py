@@ -4,8 +4,11 @@ from markupsafe import escape
 # from old import *
 from WCIFManip import *
 from run_main import *
+import io
+import zipfile
 
 app = Flask(__name__)
+# TODO, Change before running on server
 app.secret_key = "please do not hack our good webserver blakd isjdf"
 
 @app.route('/')
@@ -25,12 +28,20 @@ def logged_in(): # TODO, make some checks that the code is valid and not malicou
         me = get_me(session['token'])
         if me.status_code == 200:
             user_name = json.loads(me.content)['me']['name']
+            session['name'] = user_name
             comps = get_coming_comps(session['token'])
             return render_template('logged_in.html',data=user_name,comps=comps)
         else:
             return f"Some error occured: {me.status_code}, {me.content}"
     else:
         return "You are currently not authorized. Either go to the playground or ensure you are logged in."
+
+@app.route('/playground')
+def playground():
+    temp_name = "Not logged in"
+    if 'name' in session:
+        temp_name = session['name']
+    return render_template('playground.html',name=temp_name)
 
 @app.route("/comp/<compid>")
 def comp_page(compid):
@@ -54,23 +65,27 @@ def generate_n_download(compid):
             if request.method == 'POST':
                 # Escape all of these
                 form_data = request.form
-                session['stations'] = int(form_data["stations"])
-                session['stages'] = form_data["stages"]
+                session['stations'] = int(escape(form_data["stations"]))
+                session['stages'] = int(escape(form_data["stages"]))
                 session['combinedEvents'] = form_data["combinedEvents"]
-                session['postToWCIF'] = form_data["postToWCIF"] # Check this one
-                session['origWCIF'] = getWcif(compid,session['token']) # Make some check if the person has admin rights
-                pdf_overview = callAll(session['origWCIF'],session['stations']) # Change this to be more than one file
+                session['postToWCIF'] = request.form.getlist("postToWCIF")
+                wcif =  getWcif(compid,session['token']) # TODO Make some check if the person has admin rights
+                
+                pdfs_to_user = callAll(wcif,session['stations'],stages=session['stages'])
+                
+                if session['stages'] > 1:
+                    scorecardObj = pdfs_to_user.pop()
+                    scorecardZip = zipfile.ZipFile(io.BytesIO(scorecardObj[-1]))
+                    for name in scorecardZip.namelist():
+                        with scorecardZip.open(name, 'r') as pdf_file:
+                            pdfs_to_user.append((name,pdf_file.read()))
+                
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                    for file_name,data in pdfs_to_user:
+                        zip_file.writestr(file_name, data)
 
-                # make this much nicer
-                # binary = pdf_overview.output(dest='b').decode('latin1')
-                binary = pdf_overview.output(dest='b')
-                # overview_send = make_response(binary)
-                # overview_send.headers['Content-Type'] = 'application/pdf'
-                # overview_send.headers['Content-Disposition'] = f'inline; filename={compid}GroupOverview.pdf'
-
-                # session['pdf_overview'] = binary
-                # print(session)
-                return Response(binary,mimetype="application/pdf",headers={'Content-Disposition': f'attachment;filename={compid}GroupOverview.pdf'})
+                return Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
             # if "pdf_overview" in session:
                 # return render_template("files_to_download.html")
             # else:

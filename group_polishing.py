@@ -63,3 +63,70 @@ def getStationNumbers(scheduleInfo,personInfo,combined,stages):
                     personInfo[person].stationNumbers[comSplit] = deepcopy(personInfo[person].stationNumbers[combHy])
             if combHy in personInfo[person].stationNumbers:
                 personInfo[person].stationNumbers.pop(combHy)
+
+
+
+def sortForDelegates(competitors,delegates):
+    # newList = []
+    for i in range(len(competitors)):
+        for j in range(i+1,len(competitors)):
+            if competitors[j] in delegates:
+                competitors[i],competitors[j] = competitors[j],competitors[i]
+    return competitors
+
+def tempCombinedAssigning(scheduleInfo,personInfo,hdcEvents,delegates): # Only works for two groups
+    competitorsInAll = []
+    for event in hdcEvents:
+        scheduleInfo.stationOveriew[event] = {}
+        for groupNum in range(1,3):
+            scheduleInfo.stationOveriew[event][groupNum] = {}
+        competitorsInAll = list(set(scheduleInfo.eventCompetitors[event]) | set(competitorsInAll))
+    # competitorsInAll.sort(key=lambda x:personInfo[x].orga)
+    competitorsInAll = sortForDelegates(competitorsInAll,delegates)
+    halfs = [competitorsInAll[::2],competitorsInAll[1::2]]
+    
+    for groupNum in range(1,3):
+        for stationNumber, competitor in enumerate(halfs[groupNum-1]):
+            for event in hdcEvents:
+                if event in personInfo[competitor].events:
+                    personInfo[competitor].groups[event] = groupNum
+                    scheduleInfo.groups[event][groupNum].append(competitor)
+                    scheduleInfo.stationOveriew[event][groupNum][competitor] = stationNumber+1
+                    personInfo[competitor].stationNumbers[event] = stationNumber+1
+    
+
+def HDCSomeEvents(): # Copy paste from other file, needs adjusting
+    response,header = getWcif(id)
+    data = json.loads(response.content)
+
+    stations = 10
+    fixed = False
+    combined = None
+    just1GroupofBigBLD = True
+    combined = None
+
+    people,organizers,delegates = competitorBasicInfo(data)
+
+    schedule = scheduleBasicInfo(data,people,organizers,delegates,stations,fixed=fixed,customGroups= {},combinedEvents=combined,just1GroupofBigBLD=just1GroupofBigBLD)
+
+    getGroupCount(schedule,fixed,stations)
+    hdc_Events = ['333oh','skewb','sq1']
+    tempCombinedAssigning(schedule,people,hdc_Events,delegates)
+
+    for event in schedule.events:
+        if event[0] not in hdc_Events:
+            splitNonOverlapGroups(schedule, people, event[0],fixed)
+
+    for event in schedule.eventWOTimes:
+        if event not in hdc_Events:
+            schedule.stationOveriew[event] = {}
+            for groupNum in schedule.groups[event]:
+                schedule.stationOveriew[event][groupNum] = {}
+                for idx,person in enumerate(schedule.groups[event][groupNum]):
+                    people[person].stationNumbers[event] = idx+1
+                    schedule.stationOveriew[event][groupNum][person] = idx+1
+    name = schedule.name
+    compCards(schedule,people,f'{target}/{name}compCards.pdf',mixed={})
+    CSVForScorecards(schedule,people,combined,f'{target}/{name}stationNumbers.csv')
+    CSVForTimeLimits(schedule,people,combined,f'{target}/{name}timeLimits.csv')
+    genScorecards(schedule,target,stations,None,False)

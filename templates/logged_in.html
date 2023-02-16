@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>DVE Groups</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
     <p>
         Hello, {{ data }}. Below you can find all of your upcoming competitions.
         {% for comp in comps%}
         <li> <a href="/comp/{{comp[1]}}">{{comp[0]}}</a> </li>
         {% endfor %}
     </p>
-</body>
-</html>
+{% endblock %}

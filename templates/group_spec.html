@@ -1,20 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>DVE Groups</title>
-</head>
-<body>
-    <p Fill the boxes our></p>
+{% extends 'base.html' %}
 
-    <!-- <form> action="/comp/{{compid}}/download" method="POST" -->
-    <form action="/comp/{{compid}}/download" method="POST"
+{% block content %}
+<p Fill the boxes our></p>
 
-        <p>Station count <input type = "text" name = "stations" /> </p>
-        <p>Number of stages (only works with 1 rn) <input type = "text" value = 1 name = "stages" /> </p>
-        <p>Combined events (not implemented) <input type = "text" name = "combinedEvents" /> </p>
-        <p>Post to WCIF (Currently it doesn't do anything, but needs to be checked because of a bug) <input type = "checkbox" name = "postToWCIF" /> </p>
-        <p>Generate and go to downloads <input type="submit" name = "submit" /> </p>
-    </form>
-</body>
-</html>
+<form action="/comp/{{compid}}/download" method="POST"
+
+    <p>Station count <input type = "text" name = "stations" /> </p>
+    <p>Number of stages <input type = "text" value = 1 name = "stages" /> </p>
+    <p>Combined events (not implemented). Write 'all' for HDC style <input type = "text" name = "combinedEvents" /> </p>
+    <p>Post to WCIF (Currently it doesn't do anything) <input type = "checkbox" name = "postToWCIF" /> </p>
+    <p>HDC Style(group by names, still in works) <input type = "checkbox" name = "HDC_sorting" /> </p>
+    <p>Generate and go to downloads <input type="submit" name = "submit" /> </p>
+</form>
+{% endblock %}
