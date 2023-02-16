@@ -9,7 +9,7 @@ from make_groups import *
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-def callAll(data,stations,stages=None,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
+def callAll(data,stations,authorized,stages=None,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
     # path = f"../{id}"
     # if not os.path.isdir(path):
     #     os.mkdir(path)
@@ -19,7 +19,7 @@ def callAll(data,stations,stages=None,differentColours=False,mixed={},fixed=Fals
     # if not os.path.isdir(target):
     #     os.mkdir(target)
 
-    people,organizers,delegates = competitorBasicInfo(data)
+    people,organizers,delegates = competitorBasicInfo(data,authorized)
 
     schedule = scheduleBasicInfo(data,people,organizers,delegates,stations,fixed=fixed,customGroups= customGroups,combinedEvents=combined,just1GroupofBigBLD=just1GroupofBigBLD)
 
@@ -49,7 +49,7 @@ def callAll(data,stations,stages=None,differentColours=False,mixed={},fixed=Fals
     no_stages = 1 if not stages else stages
     file_extension = 'pdf' if no_stages == 1 else 'zip'
     per_stage = int(stations/no_stages)
-    per_stage +=1 # BEcause Anker be buggy
+    per_stage +=1 # Not needed once the anker.so program is updated
     scorecards = genScorecards(scorecardCSV,timelimitCSV,name,no_stages,per_stage,False) # Check the order of these stage arguments
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview

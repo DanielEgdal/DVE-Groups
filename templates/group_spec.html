@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<p Fill the boxes our></p>
+{% if status == 200 %}
+<p class="managerStatus goodManager">This is a competition that you can manage.</div>
+{% elif status == 401 %}
+<p class="managerStatus warningManager">You get 401, which means you are not logged in, and will have limited features.</div>
+{% elif status == 403 %}
+<p class="managerStatus warningManager">This is a competition which you cannot manage, and will have limited features.</div>
+{% endif %}
 
 <form action="/comp/{{compid}}/download" method="POST"
 

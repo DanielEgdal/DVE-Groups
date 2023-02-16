@@ -44,8 +44,12 @@ def getHeaderForWCIF():
 def getWcif(id,header):
 
     wcif = requests.get(f"https://www.worldcubeassociation.org/api/v0/competitions/{id}/wcif",headers=header)
-    assert wcif.status_code == 200
-    return json.loads(wcif.content)
+    # assert wcif.status_code == 200
+    return json.loads(wcif.content),wcif.status_code
+
+def getWCIFPublic(id):
+    wcif = requests.get(f"https://www.worldcubeassociation.org/api/v0/competitions/{id}/wcif/public")
+    return json.loads(wcif.content),wcif.status_code
 
 def postWcif(id,wcif,header):
     r = requests.patch(f"https://www.worldcubeassociation.org/api/v0/competitions/{id}/wcif", json=wcif,headers=header)

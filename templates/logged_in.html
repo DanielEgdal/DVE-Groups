@@ -2,7 +2,7 @@
 
 {% block content %}
     <p>
-        Hello, {{ data }}. Below you can find all of your upcoming competitions.
+        Hello, {{ user_name }}. Below you can find all of your upcoming competitions.
         {% for comp in comps%}
         <li> <a href="/comp/{{comp[1]}}">{{comp[0]}}</a> </li>
         {% endfor %}

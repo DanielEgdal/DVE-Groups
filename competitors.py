@@ -25,7 +25,7 @@ class Competitor():
     def __str__(self):
         return self.name + " + info"
 
-def competitorBasicInfo(data):
+def competitorBasicInfo(data,authorized=True):
     """
     Get all the basic information for each competitor.
     """
@@ -48,8 +48,12 @@ def competitorBasicInfo(data):
                         competitor.orga = 1 # Setting this for sorting by speed
                         delegates.append(person['name'])
                         debuff = 1
-                competitor.age = year - int(person["birthdate"][:4]) #getAge
-                competitor.dob = person["birthdate"]
+                if authorized:
+                    competitor.age = year - int(person["birthdate"][:4])
+                    competitor.dob = person["birthdate"]
+                else:
+                    competitor.age = 20
+                    competitor.dob = 'Redacted'
 
                 for eventData in person['personalBests']:
                     if eventData['eventId'] not in ('333fm','444bf','333bf','555bf'):

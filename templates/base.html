@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <title>DVE Groups</title>
     <link rel="shortcut icon" href="{{url_for('static',filename='logo.png')}}">
+    <link rel="stylesheet"  type="text/css" href="{{url_for('.static', filename='style.css')}}">
 </head>
 <body>
     {% block content %} {% endblock %}
+
+    <hr>
+
+    {% if user_name %}
+    <p>Logged in as {{user_name}} </p>
+    {% else %}
+    <p>Not logged in</p>
+    {% endif %}
 </body>
 </html>

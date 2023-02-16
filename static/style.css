@@ -1,0 +1,21 @@
+.managerStatus {
+    width: 96%;
+    height: 20px;
+    border: 1px solid black;
+    padding: 10px;
+    margin: 11px;
+    display: flex;
+    align-items: center;
+  }
+
+.goodManager {
+    background-color: #27ff27;
+  }
+
+.warningManager {
+    background-color: yellow;
+}
+
+/* p.managerStatus {
+    background-color: green;
+} */

@@ -1,4 +1,4 @@
-from flask import session, Flask, render_template,request,url_for,send_file,Response,make_response,send_file
+from flask import session, Flask, render_template,request,redirect,url_for,send_file,Response,make_response,send_file, flash
 import json, re
 from markupsafe import escape
 # from old import *
@@ -13,35 +13,35 @@ app.secret_key = "please do not hack our good webserver blakd isjdf"
 
 @app.route('/')
 def hello():
-    return render_template('index.html')
+    if 'name' not in session:
+        session['name'] = None
+    return render_template('index.html',user_name=session['name'])
 
-@app.route('/show_token')
+@app.route('/show_token') # If we can get SSL/Https, then this function might be able to display the code. Or better, oauth can happen as intended.
 def show_token():
     return "Hi"
 
-@app.route('/authorized', methods = ['POST', 'GET'])
+@app.route('/me', methods = ['POST', 'GET'])
 def logged_in(): # TODO, make some checks that the code is valid and not malicous
     if request.method == 'POST':
         form_data = request.form
         session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
-    if 'token' in session:
-        me = get_me(session['token'])
-        if me.status_code == 200:
-            user_name = json.loads(me.content)['me']['name']
-            session['name'] = user_name
-            comps = get_coming_comps(session['token'])
-            return render_template('logged_in.html',data=user_name,comps=comps)
-        else:
-            return f"Some error occured: {me.status_code}, {me.content}"
+    if 'token' in session: # TODO, doesn't make sense with the rest of the flow, fix
+        if not session['name']:
+            me = get_me(session['token'])
+            if me.status_code == 200:
+                user_name = json.loads(me.content)['me']['name']
+                session['name'] = user_name
+            else:
+                return f"Some error occured: {me.status_code}, {me.content}"
+        comps = get_coming_comps(session['token'])
+        return render_template('logged_in.html',user_name=session['name'],comps=comps)   
     else:
         return "You are currently not authorized. Either go to the playground or ensure you are logged in."
 
 @app.route('/playground')
 def playground():
-    temp_name = "Not logged in"
-    if 'name' in session:
-        temp_name = session['name']
-    return render_template('playground.html',name=temp_name)
+    return render_template('playground.html',user_name=session['name'])
 
 @app.route("/comp/<compid>")
 def comp_page(compid):
@@ -50,7 +50,13 @@ def comp_page(compid):
     if len(escapedCompid) <= 32:
         pattern = re.compile("^[a-zA-Z\d]+$")
         if pattern.match(escapedCompid):
-            return render_template("group_spec.html",compid=compid)
+            if 'token' in session:
+                wcif,statusCode =  getWcif(compid,session['token'])
+                session['canAdminComp'] = True if statusCode == 200 else False
+            else:
+                session['canAdminComp'] = False
+                statusCode = 401
+            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode)
         else:
             return fail_string
     return fail_string
@@ -69,9 +75,12 @@ def generate_n_download(compid):
                 session['stages'] = int(escape(form_data["stages"]))
                 session['combinedEvents'] = form_data["combinedEvents"]
                 session['postToWCIF'] = request.form.getlist("postToWCIF")
-                wcif =  getWcif(compid,session['token']) # TODO Make some check if the person has admin rights
+                if session['canAdminComp']:
+                    wcif,statusCode =  getWcif(compid,session['token'])
+                else:
+                    wcif,statusCode =  getWCIFPublic(compid)
                 
-                pdfs_to_user = callAll(wcif,session['stations'],stages=session['stages'])
+                pdfs_to_user = callAll(wcif,session['stations'],authorized=session['canAdminComp'], stages=session['stages'])
                 
                 if session['stages'] > 1:
                     scorecardObj = pdfs_to_user.pop()
@@ -84,8 +93,9 @@ def generate_n_download(compid):
                 with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
                     for file_name,data in pdfs_to_user:
                         zip_file.writestr(file_name, data)
-
-                return Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
+                zipFiles = Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
+                return zipFiles
+                # return redirect(url_for("comp_page",compid=compid),303,zipFiles)
             # if "pdf_overview" in session:
                 # return render_template("files_to_download.html")
             # else:
