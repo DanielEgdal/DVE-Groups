@@ -2,14 +2,26 @@ from flask import session, Flask, render_template,request,redirect,url_for,send_
 import json, re
 from markupsafe import escape
 # from old import *
+import os
 from WCIFManip import *
 from run_main import *
 import io
 import zipfile
 
 app = Flask(__name__)
-# TODO, Change before running on server
-app.secret_key = "please do not hack our good webserver blakd isjdf"
+if os.path.exists("secret_key.txt"):
+    with open("secret_key.txt") as f:
+        app.secret_key = f.readline()
+else:
+    with open("secret_key.txt",'w') as f:
+        from string import ascii_letters, punctuation
+        from random import choice
+        combo = ascii_letters + punctuation
+        key = "".join([choice(combo) for i in range(20)])
+        f.write(key)
+        app.secret_key = key
+
+# app.secret_key = "please do not hack our good webserver blakd isjdf"
 
 @app.route('/')
 def hello():
@@ -56,12 +68,12 @@ def comp_page(compid):
             else:
                 session['canAdminComp'] = False
                 statusCode = 401
-            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode)
+            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode,admin=(session['canAdminComp']))
         else:
             return fail_string
     return fail_string
 
-@app.route("/comp/<compid>/download", methods = ['POST', 'GET'])
+@app.route("/comp/<compid>/download", methods = ['POST'])
 def generate_n_download(compid):
     fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
     escapedCompid = escape(compid)
@@ -74,13 +86,16 @@ def generate_n_download(compid):
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
                 session['combinedEvents'] = form_data["combinedEvents"]
-                session['postToWCIF'] = request.form.getlist("postToWCIF")
+                # session['postToWCIF'] = request.form.getlist("postToWCIF")
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
+                    session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
+                    # print(session['postToWCIF'])
                 else:
                     wcif,statusCode =  getWCIFPublic(compid)
+                    session['postToWCIF']  = False
                 
-                pdfs_to_user = callAll(wcif,session['stations'],authorized=session['canAdminComp'], stages=session['stages'])
+                pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'])
                 
                 if session['stages'] > 1:
                     scorecardObj = pdfs_to_user.pop()

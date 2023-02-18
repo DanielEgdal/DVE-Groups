@@ -56,13 +56,13 @@ def postWcif(id,wcif,header):
     print(r)
     print(r.content)
 
-def doEntireWCIFPost(data,people,schedule,header):
+def doEntireWCIFPost(compid,data,people,schedule,header):
     updateScrambleCount(data,schedule)
     cleanChildActivityWCIF(data,schedule)
     cleanAssignmentsWCIF(data)
     createChildActivityWCIF(data,schedule)
     enterPersonActivitiesWCIF(data,people,schedule)
-    postWcif(id,data,header)
+    postWcif(compid,data,header)
 
 def updateScrambleCount(data,scheduleInfo): 
     for idx,event in enumerate(data['events']): 

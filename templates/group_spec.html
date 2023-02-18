@@ -4,7 +4,7 @@
 {% if status == 200 %}
 <p class="managerStatus goodManager">This is a competition that you can manage.</div>
 {% elif status == 401 %}
-<p class="managerStatus warningManager">You get 401, which means you are not logged in, and will have limited features.</div>
+<p class="managerStatus warningManager">You are not logged in, and will have limited features.</div>
 {% elif status == 403 %}
 <p class="managerStatus warningManager">This is a competition which you cannot manage, and will have limited features.</div>
 {% endif %}
@@ -14,8 +14,12 @@
     <p>Station count <input type = "text" name = "stations" /> </p>
     <p>Number of stages <input type = "text" value = 1 name = "stages" /> </p>
     <p>Combined events (not implemented). Write 'all' for HDC style <input type = "text" name = "combinedEvents" /> </p>
-    <p>Post to WCIF (Currently it doesn't do anything) <input type = "checkbox" name = "postToWCIF" /> </p>
     <p>HDC Style(group by names, still in works) <input type = "checkbox" name = "HDC_sorting" /> </p>
+    {% if admin %}
+        <p>Post to WCIF <input type = "checkbox" name = "postToWCIF"/> </p>
+    {% else %}
+        <p>Post to WCIF <input type = "checkbox" name = "postToWCIF" disabled/> </p>
+    {% endif %}
     <p>Generate and go to downloads <input type="submit" name = "submit" /> </p>
 </form>
 {% endblock %}

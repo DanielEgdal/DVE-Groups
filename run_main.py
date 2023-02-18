@@ -9,15 +9,7 @@ from make_groups import *
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-def callAll(data,stations,authorized,stages=None,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
-    # path = f"../{id}"
-    # if not os.path.isdir(path):
-    #     os.mkdir(path)
-    # response,header = getWcif(id)
-
-    # target = path+'/outfiles'
-    # if not os.path.isdir(target):
-    #     os.mkdir(target)
+def callAll(data,header,stations,authorized,postWCIF = False, stages=None,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
 
     people,organizers,delegates = competitorBasicInfo(data,authorized)
 
@@ -46,6 +38,10 @@ def callAll(data,stations,authorized,stages=None,differentColours=False,mixed={}
     
     scorecardCSV= CSVForScorecards(schedule,people,combined)
     timelimitCSV = CSVForTimeLimits(schedule,combined)
+
+    if postWCIF:
+        doEntireWCIFPost(name,data,people,schedule,header)
+
     no_stages = 1 if not stages else stages
     file_extension = 'pdf' if no_stages == 1 else 'zip'
     per_stage = int(stations/no_stages)
