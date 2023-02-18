@@ -1,6 +1,7 @@
 from flask import session, Flask, render_template,request,redirect,url_for,send_file,Response,make_response,send_file, flash
 import json, re
 from markupsafe import escape
+from urllib.parse import urlparse, parse_qs
 # from old import *
 import os
 from WCIFManip import *
@@ -25,20 +26,35 @@ else:
         )
 
 @app.route('/')
-def hello():
+def home():
     if 'name' not in session:
         session['name'] = None
     return render_template('index.html',user_name=session['name'])
 
+@app.route('/logout',methods=['GET','POST'])
+def logout():
+    keys = [key for key in session.keys()]
+    for key in keys:
+        session.pop(key)
+    return redirect(url_for('home'))
+        
+
 @app.route('/show_token') # If we can get SSL/Https, then this function might be able to display the code. Or better, oauth can happen as intended.
 def show_token():
-    return "Hi"
+    return render_template('show_token.html',user_name=session['name'])
+
+@app.route('/process_token',methods=['POST'])
+def process_token():
+    access_token_temp = request.form['access_token']
+    access_token= access_token_temp.split('access_token=')[1].split('&')[0]
+    session['token'] = {'Authorization':f"Bearer {access_token}"}
+    return "Redirect should be happening to /me. Otherwise do it manually."
 
 @app.route('/me', methods = ['POST', 'GET'])
 def logged_in(): # TODO, make some checks that the code is valid and not malicous
-    if request.method == 'POST':
-        form_data = request.form
-        session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
+    # if request.method == 'POST':
+    #     form_data = request.form
+    #     session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
     if 'token' in session: # TODO, doesn't make sense with the rest of the flow, fix
         if not session['name']:
             me = get_me(session['token'])
