@@ -11,17 +11,18 @@ import zipfile
 app = Flask(__name__)
 if os.path.exists("secret_key.txt"):
     with open("secret_key.txt") as f:
-        app.secret_key = f.readline()
+        app.config.update(
+            SECRET_KEY = f.readline(),
+            SESSION_COOKIE_SECURE = True
+        )
 else:
     with open("secret_key.txt",'w') as f:
-        from string import ascii_letters, punctuation
-        from random import choice
-        combo = ascii_letters + punctuation
-        key = "".join([choice(combo) for i in range(20)])
-        f.write(key)
-        app.secret_key = key
-
-# app.secret_key = "please do not hack our good webserver blakd isjdf"
+        from secrets import token_hex
+        key = token_hex()
+        app.config.update(
+            SECRET_KEY = key,
+            SESSION_COOKIE_SECURE = True
+        )
 
 @app.route('/')
 def hello():
