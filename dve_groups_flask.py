@@ -24,6 +24,7 @@ else:
             SECRET_KEY = key,
             SESSION_COOKIE_SECURE = True
         )
+        f.write(key)
 
 @app.route('/')
 def home():
@@ -145,4 +146,14 @@ def generate_n_download(compid):
 #         print(session)
 #         return "You don't have any pdf overview saved"
     
-app.run(debug=True)
+# app.run(debug=True)
+
+from wsgiref.simple_server import make_server
+
+host = '0.0.0.0'
+port = 5000
+# app.run(host=host,port=port)
+
+with make_server(host,port,app) as server:
+    print(f"serving on http://{host}:{port}/")
+    server.serve_forever()
