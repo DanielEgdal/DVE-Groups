@@ -15,10 +15,13 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME = 3600
 )
 
-@app.route('/')
-def home():
+@app.before_request
+def give_name():
     if 'name' not in session:
         session['name'] = None
+
+@app.route('/')
+def home():
     return render_template('index.html',user_name=session['name'])
 
 @app.route('/logout',methods=['GET','POST'])
