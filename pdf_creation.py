@@ -1,6 +1,9 @@
 from fpdf import FPDF # For pdfs. pip3 install fpdf2
 from copy import deepcopy
 
+dejavu= "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf"
+dejavub = '/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf'
+
 def convertCSV(scheduleInfo,personInfo,outfile,combined=None): # TODO Move the fix of the combined outside this func
     """
     In the accepted CSV format of https://goosly.github.io/AGE/
@@ -55,8 +58,8 @@ def makePDFOverview(scheduleInfo):
 
     pdf.set_auto_page_break(auto=True,margin=15)
     # See main for fonts. Needed because of utf-8 stuff and names
-    pdf.add_font('DejaVu','', fname='fonts/DejaVuSansCondensed.ttf', uni=True) 
-    pdf.add_font('DejaVub','', fname='fonts/DejaVuSansCondensed-Bold.ttf', uni=True)
+    pdf.add_font('DejaVu','',dejavu, uni=True) 
+    pdf.add_font('DejaVub','', dejavub, uni=True)
 
     pdf.set_font('DejaVub','',22)
     pdf.cell(65,6,f'{scheduleInfo.name} Group Overview',ln=True)
@@ -257,8 +260,8 @@ def compCards(scheduleInfo,personInfo,mixed={}):
     pdf.set_left_margin(4.5)
     pdf.set_auto_page_break(False)
     pdf.add_page()
-    pdf.add_font('DejaVu','', fname='fonts/DejaVuSansCondensed.ttf', uni=True)
-    pdf.add_font('DejaVub','', fname='fonts/DejaVuSansCondensed-Bold.ttf', uni=True)
+    pdf.add_font('DejaVu','', dejavu, uni=True)
+    pdf.add_font('DejaVub','', dejavub, uni=True)
     pdf.set_font('DejaVu','',7)
     # personInfo.sort(key=lambda x:x['name'])
     personlist = [val for val in personInfo.values()]
@@ -326,7 +329,7 @@ def headerRegList(pdf):
 def getRegList(personInfo):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font('DejaVu','', fname='fonts/DejaVuSansCondensed.ttf', uni=True)
+    pdf.add_font('DejaVu','', dejavu, uni=True)
     pdf.set_font('DejaVu','',8)
     pdf.cell(65,6,f'Indtjekning: Deltagere som ikke er nye er der intet specielt ved, bare sæt flueben ved dem når de ankommer.',ln=True)
     pdf.cell(65,6,f'Nye deltagere er der hvor du skal fokusere. Bed om ID (hvor man kan se nationalitet), og tjek at alt information passer.',ln=True)

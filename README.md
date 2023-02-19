@@ -4,6 +4,8 @@ My application for generating groups for first rounds of WCA competitions. The a
 
 Additionally useful PDF's are generated to organisers. The program makes use of a slight modification of [Anker's scorecards](https://github.com/Daniel-Anker-Hermansen/WCA_tools_lib/tree/main/wca_scorecards_lib) for scorecards.
 
+Notes on install, for ubuntu to get the fonts do `apt-get install fonts-dejavu-extra`. This should be the best approach. Otherwise, use the fonts and specify them as `fname` like in one of the early instances.
+
 TODO:
 
 * Combined event handling (first competing, then juding).
