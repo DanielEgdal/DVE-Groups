@@ -4,27 +4,19 @@ from markupsafe import escape
 from urllib.parse import urlparse, parse_qs
 # from old import *
 import os
+from secrets import token_hex
 from WCIFManip import *
 from run_main import *
 import io
 import zipfile
 
 app = Flask(__name__)
-if os.path.exists("secret_key.txt"):
-    with open("secret_key.txt") as f:
-        app.config.update(
-            SECRET_KEY = f.readline(),
-            SESSION_COOKIE_SECURE = True
-        )
-else:
-    with open("secret_key.txt",'w') as f:
-        from secrets import token_hex
-        key = token_hex()
-        app.config.update(
-            SECRET_KEY = key,
-            SESSION_COOKIE_SECURE = True
-        )
-        f.write(key)
+
+key = token_hex()
+app.config.update(
+    SECRET_KEY = key,
+    SESSION_COOKIE_SECURE = True
+)
 
 @app.route('/')
 def home():
@@ -104,7 +96,6 @@ def generate_n_download(compid):
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
                 session['combinedEvents'] = form_data["combinedEvents"]
-                # session['postToWCIF'] = request.form.getlist("postToWCIF")
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
@@ -148,12 +139,5 @@ def generate_n_download(compid):
     
 # app.run(debug=True)
 
-from wsgiref.simple_server import make_server
-
-host = '0.0.0.0'
-port = 5000
-# app.run(host=host,port=port)
-
-with make_server(host,port,app) as server:
-    print(f"serving on http://{host}:{port}/")
-    server.serve_forever()
+if __name__ == '__main__':
+    app.run(port=5000)
