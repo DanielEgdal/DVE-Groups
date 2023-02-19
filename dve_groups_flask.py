@@ -1,10 +1,7 @@
 from flask import session, Flask, render_template,request,redirect,url_for,send_file,Response,make_response,send_file, flash
 import json, re
 from markupsafe import escape
-from urllib.parse import urlparse, parse_qs
-# from old import *
-import os
-from secrets import token_hex
+from secret_key import secret_key
 from WCIFManip import *
 from run_main import *
 import io
@@ -12,10 +9,10 @@ import zipfile
 
 app = Flask(__name__)
 
-key = token_hex()
 app.config.update(
-    SECRET_KEY = key,
-    SESSION_COOKIE_SECURE = True
+    SECRET_KEY = secret_key,
+    SESSION_COOKIE_SECURE = True,
+    PERMANENT_SESSION_LIFETIME = 3600
 )
 
 @app.route('/')
@@ -45,9 +42,9 @@ def process_token():
 
 @app.route('/me', methods = ['POST', 'GET'])
 def logged_in(): # TODO, make some checks that the code is valid and not malicous
-    # if request.method == 'POST':
-    #     form_data = request.form
-    #     session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
+    if request.method == 'POST':
+        form_data = request.form
+        session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
     if 'token' in session: # TODO, doesn't make sense with the rest of the flow, fix
         if not session['name']:
             me = get_me(session['token'])
