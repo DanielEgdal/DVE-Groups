@@ -1,4 +1,4 @@
-from flask import session, Flask, render_template,request,redirect,url_for,send_file,Response,make_response,send_file, flash
+from flask import session, Flask, render_template,request,redirect,url_for,jsonify,Response,send_file,make_response,send_file, flash
 import json, re
 from markupsafe import escape
 from secret_key import secret_key
@@ -75,10 +75,18 @@ def comp_page(compid):
             if 'token' in session:
                 wcif,statusCode =  getWcif(compid,session['token'])
                 session['canAdminComp'] = True if statusCode == 200 else False
+                if wcif['extensions']:
+                    if 'stations' in wcif['extensions'][0]['data']:
+                        session['pre_stations'] = wcif['extensions'][0]['data']['stations']
+                    else:
+                        session['pre_stations'] = None
+                else:
+                    session['pre_stations'] = None
             else:
                 session['canAdminComp'] = False
+                session['pre_stations'] = None
                 statusCode = 401
-            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode,admin=(session['canAdminComp']))
+            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode,admin=(session['canAdminComp']),pre_stations = session['pre_stations'])
         else:
             return fail_string
     return fail_string
@@ -128,14 +136,11 @@ def generate_n_download(compid):
             return fail_string
     return fail_string
 
-# @app.route("/pdf_overview")
-# def get_pdf_overview():
-#     if "pdf_overview" in session:
-#         # return session['pdf_overiew']
-#         return send_file(session['pdf_overiew'])
-#     else:
-#         print(session)
-#         return "You don't have any pdf overview saved"
+@app.route("/wcif-extensions/CompetitionConfig.json")
+def spec_url():
+    data = {'description':"The tool used to generate scorecards for most first rounds. More documentation will follow later. This is kind of a mess rn."
+            }
+    return jsonify(data)
     
 # app.run(debug=True)
 

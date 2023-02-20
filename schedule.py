@@ -77,11 +77,11 @@ def getGroupCount(scheduleInfo,fixedSeating,stationCount,custom=[False],just1=[F
                     scheduleInfo.groups[event][amount] = []
 
 class Schedule():
-    def __init__(self):
+    def __init__(self,stations):
         self.name = ''
         self.longName= ''
         self.timezone = ''
-        self.amountStations = 0
+        self.amountStations = stations
         self.events = [] # list of lists. Inner lists have three values: Event name, s time, and e time of r1.
         self.eventWOTimes = []
         self.timelimits = {}
@@ -216,9 +216,9 @@ def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,fixed,custom
     
     if combinedEvents==None:
         combinedEvents = ('k','k')
-    schedule = Schedule()
+    schedule = Schedule(stations)
     schedule.combinedEvents = combinedEvents
-    schedule.amountStations = stations
+    # schedule.amountStations = stations
     schedule.name = data['id']
     schedule.longName = data['name']
     already_there = set()

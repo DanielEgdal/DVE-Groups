@@ -98,8 +98,8 @@ def createChildActivityWCIF(data,scheduleInfo):
     childIdCounter= max([int(activity['id']) for vid, venue in enumerate(data['schedule']['venues'])
         for rid,room in enumerate(venue['rooms'])
             for aid,activity in enumerate(room['activities'])])+1
-    extensionTemplate = {'id': 'groupifier.CompetitionConfig', 
-    'specUrl': 'https://groupifier.jonatanklosko.com/wcif-extensions/CompetitionConfig.json', 
+    extensionTemplate = {'id': 'dve.CompetitionConfig', 
+    'specUrl': 'https://tools.danskspeedcubingforening.com/wcif-extensions/CompetitionConfig.json', 
     'data': {'capacity': 1, 'groups': 1, 'scramblers': 2, 'runners': 2, 'assignJudges': True}}
     childTemplate = {'id': 0, 'name': 'Event Name, Round 0, Group 0', 
     'activityCode': 'wcaeventid-r0-g0', 'startTime': 'yyyy-mm-ddThh:mm:ssZ', 'endTime': 'yyyy-mm-ddThh:mm:ssZ', 
@@ -151,12 +151,15 @@ def createChildActivityWCIF(data,scheduleInfo):
                 else:
                     pass
         data['schedule']['venues'][vid]['rooms'][rid]['extensions'] = [{"id":"groupifier.RoomConfig","specUrl":"https://groupifier.jonatanklosko.com/wcif-extensions/RoomConfig.json","data":{"stations":scheduleInfo.amountStations}}]
-    data['extensions'] = [{"id":"groupifier.CompetitionConfig",
-    "specUrl":"https://groupifier.jonatanklosko.com/wcif-extensions/CompetitionConfig.json",
-    "data":{"localNamesFirst":False,"scorecardsBackgroundUrl":"","competitorsSortingRule":"balanced",
-    "noTasksForNewcomers":False,"tasksForOwnEventsOnly":True,
-    "noRunningForForeigners":True,"printStations":False,
-    "scorecardPaperSize":"a4"}}]
+    # data['extensions'] = [{"id":"dve.CompetitionConfig",
+    # "specUrl":"https://tools.danskspeedcubingforening.com/wcif-extensions/CompetitionConfig.json",
+    # "data":{"localNamesFirst":False,"scorecardsBackgroundUrl":"","competitorsSortingRule":"balanced",
+    # "noTasksForNewcomers":False,"tasksForOwnEventsOnly":True,
+    # "noRunningForForeigners":True,"printStations":False,
+    # "scorecardPaperSize":"a4"}}]
+    data['extensions'] = [{"id":"dve.CompetitionConfig",
+    "specUrl":"https://tools.danskspeedcubingforening.com/wcif-extensions/CompetitionConfig.json",
+    "data":{'stations':scheduleInfo.amountStations}}]
 
 def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
     assignmentTemplate = {"activityId":66,"stationNumber":None,"assignmentCode":"competitor"}

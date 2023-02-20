@@ -1,9 +1,9 @@
 .managerStatus {
-    width: 96%;
+    /* width: 96%; */
     height: 20px;
     border: 1px solid black;
     padding: 10px;
-    margin: 11px;
+    /* margin: 11px; */
     display: flex;
     align-items: center;
   }
@@ -46,3 +46,21 @@
 /* p.managerStatus {
     background-color: green;
 } */
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+form p {
+  /* display: block; */
+  /* border: 1px solid black; */
+  margin: 10px 0;
+}
+
+form input[type="text"], form input[type="checkbox"], form input[type="submit"] {
+  /* margin-left: 10px; */
+  margin-top: 5px;
+  display: flex;
+}
