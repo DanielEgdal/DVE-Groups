@@ -103,7 +103,7 @@ def generate_n_download(compid):
                 form_data = request.form
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
-                session['combinedEvents'] = form_data["combinedEvents"]
+                session['combinedEvents'] = escape(form_data["combinedEvents"])
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
