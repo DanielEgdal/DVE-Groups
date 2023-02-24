@@ -5,7 +5,7 @@ from pandas import Timestamp
 
 import pytz
 
-## TODO, handle combined events better
+## Remove the old way of handling combined events, handle combined events better
 
 class Schedule():
     def __init__(self,stations,stages):
@@ -154,7 +154,7 @@ def combineCompetitors(scheduleInfo:Schedule, setOfEvents):
         competitorsInSet = list(set(scheduleInfo.eventCompetitors[event]) | set(competitorsInSet))
     return competitorsInSet
 
-def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False],just1=[False]): # TODO combined events handling
+def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False],just1=[False]):
     """
     The script isn't made for specifying a different amount of stations per event.
     Use the 'custom' variable to specify the exact amount of groups you want if there is something extraordinary

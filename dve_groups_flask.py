@@ -102,7 +102,7 @@ def generate_n_download(compid):
                 form_data = request.form
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
-                session['combinedEvents'] = escape(form_data["combinedEvents"]).strip().lower() # TODO
+                session['combinedEvents'] = escape(form_data["combinedEvents"]).strip().lower()
                 if not session['combinedEvents']:
                     session['combinedEvents'] = [[]]
                 else:

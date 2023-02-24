@@ -1,4 +1,3 @@
-# TODO add the thing for combining the combined events here
 from copy import deepcopy
 from collections import defaultdict
 from schedule import Schedule

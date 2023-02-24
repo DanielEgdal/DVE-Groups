@@ -27,10 +27,9 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     reassignJudges(schedule,people,set_sblacklist,fixed,mixed=mixed) # This part probably needs to be fixed as well for the combined events
 
     name = schedule.name
-    # TODO, needs to be fixed for combined events to work
     # manuCsv = convertCSV(schedule,people,f'{target}/{name}Groups.csv',combined=combined)
     
-    # getStationNumbers(schedule,people,combined,stages) #TODO
+    # getStationNumbers(schedule,people,combined,stages) # old
     assignStationNumbers(schedule,people)
     pdfOvierview = makePDFOverview(schedule)
 

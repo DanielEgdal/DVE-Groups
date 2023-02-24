@@ -6,9 +6,9 @@ Additionally useful PDF's are generated to organisers. The program makes use of 
 
 Notes on install, for ubuntu to get the fonts do `apt-get install fonts-dejavu-extra`. This should be the best approach. Otherwise, use the fonts and specify them as `fname` like in one of the early instances.
 
-TODO:
+Todo:
 
-* Combined event handling (first competing, then juding).
+* Remove the old way of handling combined events, handle combined events better
 
 QoL:
 

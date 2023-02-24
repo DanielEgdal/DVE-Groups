@@ -4,7 +4,7 @@ from copy import deepcopy
 dejavu= "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf"
 dejavub = '/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf'
 
-def convertCSV(scheduleInfo,personInfo,outfile,combined=None): # TODO Move the fix of the combined outside this func
+def convertCSV(scheduleInfo,personInfo,outfile,combined=None): # Outdated. Previously, Move the fix of the combined outside this func
     """
     In the accepted CSV format of https://goosly.github.io/AGE/
     """
