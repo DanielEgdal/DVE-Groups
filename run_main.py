@@ -9,11 +9,11 @@ from make_groups import *
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-def callAll(data,header,stations,authorized,postWCIF = False, stages=None,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
+def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = False,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
 
     people,organizers,delegates = competitorBasicInfo(data,authorized)
 
-    schedule = scheduleBasicInfo(data,people,organizers,delegates,stations,fixed=fixed,customGroups= customGroups,combinedEvents=combined,just1GroupofBigBLD=just1GroupofBigBLD)
+    schedule = scheduleBasicInfo(data,people,organizers,delegates,stations,stages,allCombinedEvents=allCombinedEvents,fixed=fixed,customGroups= customGroups,combinedEvents=combined,just1GroupofBigBLD=just1GroupofBigBLD)
 
     schedule, people = splitIntoGroups(schedule,people,fixed=fixed)
 
@@ -24,13 +24,14 @@ def callAll(data,header,stations,authorized,postWCIF = False, stages=None,differ
             for line in f:
                 set_sblacklist.add(line.strip())
 
-    reassignJudges(schedule,people,set_sblacklist,fixed,mixed=mixed)
+    reassignJudges(schedule,people,set_sblacklist,fixed,mixed=mixed) # This part probably needs to be fixed as well for the combined events
 
     name = schedule.name
     # TODO, needs to be fixed for combined events to work
     # manuCsv = convertCSV(schedule,people,f'{target}/{name}Groups.csv',combined=combined)
     
-    getStationNumbers(schedule,people,combined,stages)
+    # getStationNumbers(schedule,people,combined,stages) #TODO
+    assignStationNumbers(schedule,people)
     pdfOvierview = makePDFOverview(schedule)
 
     compPatches = compCards(schedule,people,mixed=mixed)
@@ -42,10 +43,9 @@ def callAll(data,header,stations,authorized,postWCIF = False, stages=None,differ
     if postWCIF:
         doEntireWCIFPost(name,data,people,schedule,header)
 
-    no_stages = 1 if not stages else stages
-    file_extension = 'pdf' if no_stages == 1 else 'zip'
-    per_stage = int(stations/no_stages)
-    per_stage +=1 # Not needed once the anker.so program is updated
-    scorecards = genScorecards(scorecardCSV,timelimitCSV,name,no_stages,per_stage,False) # Check the order of these stage arguments
+    stages = 1 if not stages else stages
+    file_extension = 'pdf' if stages == 1 else 'zip'
+    per_stage = int(stations/stages)
+    scorecards = genScorecards(scorecardCSV,timelimitCSV,name,stages,per_stage,False) 
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview

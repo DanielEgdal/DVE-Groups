@@ -1,87 +1,19 @@
 from collections import defaultdict
 from math import ceil
+from markupsafe import escape
 from pandas import Timestamp
 
 import pytz
 
 ## TODO, handle combined events better
 
-def getAvailableDuring(personInfo,scheduleInfo,combinedEvents=None):
-    """
-    Identify during which events people should be present based on their registration. 
-    People are considered to be available for an event if they compete in it, or if they are competing on that day
-    and have a registration for an event before and after the event.
-    """
-    if combinedEvents==None:
-        combinedEvents = ('k','k')
-        combinedEvents1 = ('k-k')
-    else:
-        combinedEvents1 = combinedEvents[0]+'-'+combinedEvents[1]
-    for person in personInfo:
-        for idj, days in enumerate(scheduleInfo.daySplit):
-            min = 18
-            max = 0
-            if idj != len(scheduleInfo.daySplit)-1:
-                to = scheduleInfo.daySplit[idj+1]
-            else:
-                to = len(scheduleInfo.events)
-            for idx,event in enumerate(scheduleInfo.events[days:to]):
-                if event[0] in personInfo[person].events:
-                    if idx < min:
-                        min = idx
-                    if idx > max:
-                        max = idx
-                elif event[0] == combinedEvents1:
-                    for comSplit in combinedEvents:
-                        if comSplit in personInfo[person].events:
-                            if idx < min:
-                                min = idx
-                            if idx > max:
-                                max = idx
-            for event in scheduleInfo.events[days+min:days+max+1]:
-                personInfo[person].availableDuring.add(event[0])
-                scheduleInfo.inVenue[event[0]].add(person)
-
-def combineEvents(event1,event2): # Pretty stupid function. The combined events is used super inconsistently
-    return (event1,event2)
-
-def getGroupCount(scheduleInfo,fixedSeating,stationCount,custom=[False],just1=[False]):
-    """
-    The script isn't made for specifying a different amount of stations per event.
-    Use the 'custom' variable to specify the exact amount of groups you want if there is something extraordinary
-    'just1' is when you only want one group of the event.
-    """
-    if type(custom) == dict: # dictionary
-        for event in custom:
-            scheduleInfo.groups[event] = {}
-            for amount in range(1,custom[event]+1):
-                scheduleInfo.groups[event][amount] = []
-    if just1[0]:
-        for event in just1:
-            if event in scheduleInfo.eventWOTimes and event not in custom:
-                scheduleInfo.groups[event] = {}
-                scheduleInfo.groups[event][1] = []
-    if fixedSeating:
-        for event in scheduleInfo.eventCompetitors:
-            if (event not in just1) and (event not in custom):
-                scheduleInfo.groups[event] = {}
-
-                for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
-                    scheduleInfo.groups[event][amount] = []
-    else:
-        # stationCount *=1.15
-        for event in scheduleInfo.eventCompetitors:
-            if (event not in just1) and (event not in custom):
-                scheduleInfo.groups[event] = {}
-                for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
-                    scheduleInfo.groups[event][amount] = []
-
 class Schedule():
-    def __init__(self,stations):
+    def __init__(self,stations,stages):
         self.name = ''
         self.longName= ''
         self.timezone = ''
         self.amountStations = stations
+        self.amountStages = stages
         self.events = [] # list of lists. Inner lists have three values: Event name, s time, and e time of r1.
         self.eventWOTimes = []
         self.timelimits = {}
@@ -110,7 +42,14 @@ class Schedule():
         self.maxAmountGroups = 0
         self.childActivityMapping = {} # Event -> group -> ID
         self.combinedEvents = None
+        self.allCombinedEvents = [] # List of list contaning events held together.
+        self.setOfCombinedEvents = set()
 
+    def extractSetOfCombinedEvents(self):
+        for listOfEvents in self.allCombinedEvents:
+            for event in listOfEvents:
+                self.setOfCombinedEvents.add(event)
+        
     def order(self): # ordering events in schedule
         self.events.sort(key=lambda x:x[1]) 
     
@@ -170,6 +109,100 @@ class Schedule():
                     self.overlappingEvents[event[0]].append(event2[0])
                     self.overlappingEvents[event2[0]].append(event[0])
 
+def getAvailableDuring(personInfo,scheduleInfo,combinedEvents=None):
+    """
+    Identify during which events people should be present based on their registration. 
+    People are considered to be available for an event if they compete in it, or if they are competing on that day
+    and have a registration for an event before and after the event.
+    """
+    if combinedEvents==None:
+        combinedEvents = ('k','k')
+        combinedEvents1 = ('k-k')
+    else:
+        combinedEvents1 = combinedEvents[0]+'-'+combinedEvents[1]
+    for person in personInfo:
+        for idj, days in enumerate(scheduleInfo.daySplit):
+            min = 18
+            max = 0
+            if idj != len(scheduleInfo.daySplit)-1:
+                to = scheduleInfo.daySplit[idj+1]
+            else:
+                to = len(scheduleInfo.events)
+            for idx,event in enumerate(scheduleInfo.events[days:to]):
+                if event[0] in personInfo[person].events:
+                    if idx < min:
+                        min = idx
+                    if idx > max:
+                        max = idx
+                elif event[0] == combinedEvents1:
+                    for comSplit in combinedEvents:
+                        if comSplit in personInfo[person].events:
+                            if idx < min:
+                                min = idx
+                            if idx > max:
+                                max = idx
+            for event in scheduleInfo.events[days+min:days+max+1]:
+                personInfo[person].availableDuring.add(event[0])
+                scheduleInfo.inVenue[event[0]].add(person)
+
+def combineEvents(event1,event2): # Pretty stupid function. The combined events is used super inconsistently
+    return (event1,event2)
+
+def combineCompetitors(scheduleInfo:Schedule, setOfEvents):
+    competitorsInSet = [] # Technically this logic is duplicated.
+    for event in setOfEvents:
+        competitorsInSet = list(set(scheduleInfo.eventCompetitors[event]) | set(competitorsInSet))
+    return competitorsInSet
+
+def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False],just1=[False]): # TODO combined events handling
+    """
+    The script isn't made for specifying a different amount of stations per event.
+    Use the 'custom' variable to specify the exact amount of groups you want if there is something extraordinary
+    'just1' is when you only want one group of the event.
+    """
+    if type(custom) == dict: # dictionary
+        for event in custom:
+            scheduleInfo.groups[event] = {}
+            scheduleInfo.stationOveriew[event] = {}
+            for amount in range(1,custom[event]+1):
+                scheduleInfo.groups[event][amount] = []
+                scheduleInfo.stationOveriew[amount] = {}
+    if just1[0]:
+        for event in just1:
+            if (event in scheduleInfo.eventWOTimes) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
+                scheduleInfo.groups[event] = {}
+                scheduleInfo.groups[event][1] = []
+                scheduleInfo.stationOveriew[event] = {}
+                scheduleInfo.stationOveriew[event][1] = {}
+    if fixedSeating:
+        for event in scheduleInfo.eventCompetitors:
+            if (event not in just1) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
+                scheduleInfo.groups[event] = {}
+                scheduleInfo.stationOveriew[event] = {}
+                for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
+                    scheduleInfo.groups[event][amount] = []
+                    scheduleInfo.stationOveriew[event][amount] = {}
+    else:
+        # stationCount *=1.15
+        for event in scheduleInfo.eventCompetitors:
+            if (event not in just1) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
+                scheduleInfo.groups[event] = {}
+                scheduleInfo.stationOveriew[event] = {}
+                for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
+                    scheduleInfo.groups[event][amount] = []
+                    scheduleInfo.stationOveriew[event][amount] = {}
+    if scheduleInfo.allCombinedEvents[0]:
+        for setOfEvents in scheduleInfo.allCombinedEvents:
+            competitorsInSet = combineCompetitors(scheduleInfo,setOfEvents)
+            for event in setOfEvents:
+                scheduleInfo.groupJudges[event] = {}
+                scheduleInfo.groups[event] = {}
+                scheduleInfo.stationOveriew[event] = {}
+                for amount in range(1,max([ceil(len(competitorsInSet)/stationCount) +1,3])):
+                        scheduleInfo.groups[event][amount] = []
+                        scheduleInfo.stationOveriew[event][amount] = {}
+                        scheduleInfo.groupJudges[event][amount] = []
+
 def advancementCalculation(Type,level,competitorCount):
     if Type == "percent":
         return int((level/100) * competitorCount)
@@ -208,7 +241,7 @@ def getSubSeqGroupCount(fixedCompetitors,scheduleInfo):
     else: # Waiting area
         raise NotImplementedError
 
-def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,fixed,customGroups=[False], combinedEvents=None,just1GroupofBigBLD=True): # Custom groups is a dict, combined evnets is touple
+def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed,customGroups=[False], combinedEvents=None,allCombinedEvents=[[]],just1GroupofBigBLD=True): # Custom groups is a dict, combined evnets is touple
     """
     Get all the basic information for the schedule. 
     Doesn't store which stage events appear on, but will look into if events overlap (but not fully)
@@ -216,7 +249,8 @@ def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,fixed,custom
     
     if combinedEvents==None:
         combinedEvents = ('k','k')
-    schedule = Schedule(stations)
+    schedule = Schedule(stations,stages)
+    
     schedule.combinedEvents = combinedEvents
     # schedule.amountStations = stations
     schedule.name = data['id']
@@ -290,6 +324,18 @@ def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,fixed,custom
     # 	schedule.events += tempFm
     # else:
     # 	schedule.unpred.add("333fm")
+    if allCombinedEvents == 'all':
+        schedule.allCombinedEvents.append(list(set(schedule.eventWOTimes)))
+    else:
+        for setOfEvents in allCombinedEvents:
+            for event in setOfEvents:
+                if event in set(schedule.eventWOTimes):
+                    pass
+                else:
+                    raise ValueError('Non-hosted event name entered as a combined event')
+            # newSetOfEvent = [event.unescape() for event in setOfEvents]
+            schedule.allCombinedEvents.append(setOfEvents)
+    schedule.extractSetOfCombinedEvents()
     schedule.order() # Order the events by time in schedule
     schedule.getDaySplit() # See which events are each day
     schedule.organizers = organizers # Storing list of organizers and delegates

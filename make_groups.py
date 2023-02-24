@@ -1,6 +1,9 @@
 from math import ceil
 from copy import deepcopy
 from collections import Counter
+from schedule import Schedule,combineCompetitors
+from competitors import Competitor
+from collections import defaultdict
 from overlap_groups import * 
 
 
@@ -82,10 +85,68 @@ def splitNonOverlapGroups(scheduleInfo,personInfo,event,fixed=True):
         if not groupNum:
             groupNum += 1
 
-def splitIntoGroups(scheduleInfo,personInfo,fixed=True):
+def combinedDelegateAssigning(scheduleInfo:Schedule,personInfo:dict[str,Competitor],competitorList,setOfEvents,overallInGroup,overallGroup):
+    for delegate in scheduleInfo.delegates:
+        competitorList.remove(delegate)
+    d1,d2 = scheduleInfo.delegates[::2],scheduleInfo.delegates[1::2]
+    for group,delegates in enumerate([d1,d2]):
+        for stationNumber, competitor in enumerate(delegates):
+            triggered = False
+            for event in setOfEvents:
+                if event in personInfo[competitor].events:
+                    if not triggered:
+                        overallInGroup[group+1] +=1
+                        overallGroup[competitor] = group+1
+                        triggered =True
+                    personInfo[competitor].groups[event] = group+1
+                    scheduleInfo.groups[event][group+1].append(competitor)
+                    scheduleInfo.stationOveriew[event][group+1][competitor] = stationNumber+1
+                    personInfo[competitor].stationNumbers[event] = stationNumber+1
+
+def combinedEventAssigning(scheduleInfo:Schedule,personInfo:dict[str,Competitor],judgingInAllGroups=True):
+    for setCombEvents in scheduleInfo.allCombinedEvents:
+        overallInGroup = defaultdict(int)
+        competitorsInSet = combineCompetitors(scheduleInfo,setCombEvents)
+        forJudging = deepcopy(competitorsInSet)
+        overallGroup = {} # Name to int
+        if len(scheduleInfo.delegates) > 1:
+            combinedDelegateAssigning(scheduleInfo,personInfo,competitorsInSet,setCombEvents,overallInGroup,overallGroup)
+        modOpp = len(scheduleInfo.groups[setCombEvents[0]])
+        groupNum = 1
+        while competitorsInSet:
+            assignee = competitorsInSet.pop()
+            triggered = False
+            for event in setCombEvents:
+                if event in personInfo[assignee].events:
+                    if not triggered:
+                        overallInGroup[groupNum] +=1
+                        triggered = True
+                        overallGroup[assignee] = groupNum
+                    personInfo[assignee].groups[event] = groupNum
+                    scheduleInfo.groups[event][groupNum].append(assignee)
+                    scheduleInfo.stationOveriew[event][groupNum][assignee] = overallInGroup[groupNum]
+                    personInfo[assignee].stationNumbers[event] = overallInGroup[groupNum]
+            groupNum = (groupNum%modOpp)+1
+
+        if judgingInAllGroups:
+            for judge in forJudging:
+                for group in range(1,len(scheduleInfo.groups[setCombEvents[0]])+1):
+                    if overallGroup[judge] != group:
+                        for event in setCombEvents:
+                            scheduleInfo.groupJudges[event][group].append(judge)
+                            personInfo[judge].totalAssignments +=1
+                            personInfo[judge].assignments[event].append(group) 
+        else:
+            raise NotImplementedError
+
+def splitIntoGroups(scheduleInfo:Schedule,personInfo,fixed=True):
+    
+    if scheduleInfo.setOfCombinedEvents:
+        combinedEventAssigning(scheduleInfo,personInfo)
+
     already = set()
     for event in scheduleInfo.events:
-        if event[0] not in already:
+        if (event[0] not in already) and (event[0] not in scheduleInfo.setOfCombinedEvents):
             if event[0] not in scheduleInfo.overlappingEvents:
                 splitNonOverlapGroups(scheduleInfo, personInfo, event[0],fixed)
                 already.add(event[0])
@@ -102,4 +163,4 @@ def splitIntoGroups(scheduleInfo,personInfo,fixed=True):
                 scheduleInfo, personInfo = splitIntoOverlapGroups(scheduleInfo, personInfo, combinationList,fixed) # For some reason it does not update the variables
                 already = already.union(combination) # Don't repeat the same combo of overlaps
 
-    return scheduleInfo, personInfo # For some reason it does not update the variables
+    return scheduleInfo, personInfo # For some reason it does not update the variables for the overlapping events

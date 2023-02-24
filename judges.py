@@ -1,4 +1,5 @@
 import math, random
+from schedule import Schedule
 from maxpq import MaxPQ
 
 def assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used):
@@ -233,7 +234,7 @@ def judgePQNonOverlap(event,scheduleInfo,personInfo,fixedSeating=True):
         else: # Get more staff to reduce downtime
             assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo)
 
-def assignJudges(scheduleInfo,personInfo,fixedSeating= True,dontAssign=True,mixed={}):
+def assignJudges(scheduleInfo:Schedule,personInfo,fixedSeating= True,dontAssign=True,mixed={}):
     """
     Judge assignments for overlapping events is being called together with splitIntoOverapGroups, 
     as I still need to do simulations to find the best combo for judges.
@@ -241,7 +242,7 @@ def assignJudges(scheduleInfo,personInfo,fixedSeating= True,dontAssign=True,mixe
     if dontAssign: # Don't assign judges when there is only one group
         for event in scheduleInfo.events:
             if len(scheduleInfo.groups[event[0]]) > 1:
-                if event[0] not in scheduleInfo.overlappingEvents:
+                if (event[0] not in scheduleInfo.overlappingEvents) and (event[0] not in scheduleInfo.setOfCombinedEvents):
                     if mixed:
                         if event[0] in mixed:
                             judgePQNonOverlap(event[0],scheduleInfo,personInfo,True)
@@ -251,7 +252,7 @@ def assignJudges(scheduleInfo,personInfo,fixedSeating= True,dontAssign=True,mixe
                         judgePQNonOverlap(event[0],scheduleInfo,personInfo,fixedSeating)
     else:
         for event in scheduleInfo.events:
-            if event[0] not in scheduleInfo.overlappingEvents:
+            if (event[0] not in scheduleInfo.overlappingEvents) and (event[0] not in scheduleInfo.setOfCombinedEvents):
                 if mixed:
                     if event[0] in mixed:
                         judgePQNonOverlap(event[0],scheduleInfo,personInfo,True)

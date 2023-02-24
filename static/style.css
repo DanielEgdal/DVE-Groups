@@ -64,3 +64,8 @@ form input[type="text"], form input[type="checkbox"], form input[type="submit"] 
   margin-top: 5px;
   display: flex;
 }
+
+.formInfo {
+  margin-top: -10px;
+  color: grey;
+}

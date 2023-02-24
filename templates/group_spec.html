@@ -17,8 +17,8 @@
     <p>Station count <input type = "text" name = "stations" /> </p>
     {% endif %}
     <p>Number of stages <input type = "text" value = 1 name = "stages" /> </p>
-    <p>Combined events (not implemented). Write 'all' for HDC style <input type = "text" name = "combinedEvents" /> </p>
-    <p>HDC Style(group by names, still in works) <input type = "checkbox" name = "HDC_sorting" /> </p>
+    <p>Combined events <input type = "text" name = "combinedEvents" /> </p>
+    <p class="formInfo">See documentation <a href="/wcif-extensions/CombinedEvents" target="_blank">here</a>. </p>
     {% if admin %}
         <p>Post to WCIF <input type = "checkbox" name = "postToWCIF"/> </p>
     {% else %}

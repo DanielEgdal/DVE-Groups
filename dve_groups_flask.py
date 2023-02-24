@@ -44,11 +44,11 @@ def process_token():
     return "Redirect should be happening to /me. Otherwise do it manually."
 
 @app.route('/me', methods = ['POST', 'GET'])
-def logged_in(): # TODO, make some checks that the code is valid and not malicous
+def logged_in():
     if request.method == 'POST':
         form_data = request.form
         session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
-    if 'token' in session: # TODO, doesn't make sense with the rest of the flow, fix
+    if 'token' in session:
         if not session['name']:
             me = get_me(session['token'])
             if me.status_code == 200:
@@ -99,20 +99,26 @@ def generate_n_download(compid):
         pattern = re.compile("^[a-zA-Z\d]+$")
         if pattern.match(escapedCompid):
             if request.method == 'POST':
-                # Escape all of these
                 form_data = request.form
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
-                session['combinedEvents'] = escape(form_data["combinedEvents"])
+                session['combinedEvents'] = escape(form_data["combinedEvents"]).strip().lower() # TODO
+                if not session['combinedEvents']:
+                    session['combinedEvents'] = [[]]
+                else:
+                    setsOfCombEvents = session['combinedEvents'].split('-')
+                    allOfCombEvents = []
+                    for sett in setsOfCombEvents:
+                        allOfCombEvents.append([event.strip() for event in sett.split(',')])
+                    session['combinedEvents'] = allOfCombEvents
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
-                    # print(session['postToWCIF'])
                 else:
                     wcif,statusCode =  getWCIFPublic(compid)
                     session['postToWCIF']  = False
                 
-                pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'])
+                pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
                 
                 if session['stages'] > 1:
                     scorecardObj = pdfs_to_user.pop()
@@ -127,11 +133,6 @@ def generate_n_download(compid):
                         zip_file.writestr(file_name, data)
                 zipFiles = Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
                 return zipFiles
-                # return redirect(url_for("comp_page",compid=compid),303,zipFiles)
-            # if "pdf_overview" in session:
-                # return render_template("files_to_download.html")
-            # else:
-            #     return "nothing ready for you"
         else:
             return fail_string
     return fail_string
@@ -139,6 +140,17 @@ def generate_n_download(compid):
 @app.route("/wcif-extensions/CompetitionConfig.json")
 def spec_url():
     data = {'description':"The tool used to generate scorecards for most first rounds. More documentation will follow later. This is kind of a mess rn."
+            }
+    return jsonify(data)
+
+@app.route("/wcif-extensions/CombinedEvents")
+def combinedEventsExplanation():
+    data = {"description":"Force competitors to be assigned in the same group and at the same station for all events you list. This will also give them judging assignments in all groups of these events (except when they are competing). Remember that you have to use event IDs!",
+            "options":{
+        'Empty':"Not writing anything in the field will ignore the feature.",
+            "All":"Writing `all` will assume all events are held at the same time.",
+            "One set":"You will have to comma seperate all the events. E.g. `333,222,444` means these 3 events are held at the same time.",
+            "Multiple sets":"You will be using both comma and dash seperation. The dash splits up into different sets, such that the seperations of the dash will mean those event sets are held at the same time. E.g. `333,222-444,555` means that 4x4 and 5x5 are held at the same time, and 3x3 and 2x2 are held at the same time.",}
             }
     return jsonify(data)
     

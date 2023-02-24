@@ -1,5 +1,5 @@
 import os
-from anker_scorecards_to_python import anker_scorecards
+from anker_scorecards_python import anker_scorecards
 # TODO import Anker's tool with .so file
 
 def CSVForScorecards(scheduleInfo,personInfo,combined):

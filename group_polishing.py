@@ -1,5 +1,37 @@
 # TODO add the thing for combining the combined events here
 from copy import deepcopy
+from collections import defaultdict
+from schedule import Schedule
+from competitors import Competitor
+
+def stationNumbersEventStage(scheduleInfo,personInfo,event):
+    for groupNum in scheduleInfo.groups[event]:
+        counter = 0
+        realCounter = 0
+        while realCounter < len(scheduleInfo.groups[event][groupNum]):
+            for stage in range(scheduleInfo.amountStages):
+                if stage == 0:
+                    counter +=1
+                if realCounter < len(scheduleInfo.groups[event][groupNum]):
+                    person = scheduleInfo.groups[event][groupNum][realCounter]
+                    personInfo[person].stationNumbers[event] = int(stage*(scheduleInfo.amountStations/scheduleInfo.amountStages) + (counter))
+                    scheduleInfo.stationOveriew[event][groupNum][person] = int(stage*(scheduleInfo.amountStations/scheduleInfo.amountStages) + (counter))
+                    realCounter += 1
+
+def stationNumbersEventNoStage(scheduleInfo,personInfo,event):
+    for groupNum in scheduleInfo.groups[event]:
+        for idx,person in enumerate(scheduleInfo.groups[event][groupNum]):
+            personInfo[person].stationNumbers[event] = idx+1
+            scheduleInfo.stationOveriew[event][groupNum][person] = idx+1
+
+def assignStationNumbers(scheduleInfo:Schedule,personInfo:dict[str,Competitor]):
+    useStages = True if scheduleInfo.amountStages > 1 else False
+    for event in scheduleInfo.eventWOTimes:
+        if event not in scheduleInfo.setOfCombinedEvents:
+            if useStages:
+                stationNumbersEventStage(scheduleInfo,personInfo,event)
+            else:
+                stationNumbersEventNoStage(scheduleInfo,personInfo,event)
 
 def getStationNumbers(scheduleInfo,personInfo,combined,stages):
     if not stages:
@@ -63,8 +95,6 @@ def getStationNumbers(scheduleInfo,personInfo,combined,stages):
                     personInfo[person].stationNumbers[comSplit] = deepcopy(personInfo[person].stationNumbers[combHy])
             if combHy in personInfo[person].stationNumbers:
                 personInfo[person].stationNumbers.pop(combHy)
-
-
 
 def sortForDelegates(competitors,delegates):
     # newList = []
