@@ -38,7 +38,7 @@ def show_token():
 
 @app.route('/process_token',methods=['POST'])
 def process_token():
-    access_token_temp = request.form['access_token']
+    access_token_temp = escape(request.form['access_token'])
     access_token= access_token_temp.split('access_token=')[1].split('&')[0]
     session['token'] = {'Authorization':f"Bearer {access_token}"}
     return "Redirect should be happening to /me. Otherwise do it manually."
@@ -46,8 +46,8 @@ def process_token():
 @app.route('/me', methods = ['POST', 'GET'])
 def logged_in():
     if request.method == 'POST':
-        form_data = request.form
-        session['token'] = {'Authorization':f"Bearer {form_data['token']}"}
+        token = escape(request.form['token'])
+        session['token'] = {'Authorization':f"Bearer {token}"}
     if 'token' in session:
         if not session['name']:
             me = get_me(session['token'])
