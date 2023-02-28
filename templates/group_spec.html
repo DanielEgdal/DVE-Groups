@@ -2,11 +2,11 @@
 
 {% block content %}
 {% if status == 200 %}
-<p class="managerStatus goodManager">This is a competition that you can manage.</div>
+<p class="managerStatus goodManager">This is a competition that you can manage.</p>
 {% elif status == 401 %}
-<p class="managerStatus warningManager">You are not logged in, and will have limited features.</div>
+<p class="managerStatus warningManager">You are not logged in, and will have limited features.</p>
 {% elif status == 403 %}
-<p class="managerStatus warningManager">This is a competition which you cannot manage, and will have limited features.</div>
+<p class="managerStatus warningManager">This is a competition which you cannot manage, and will have limited features.</p>
 {% endif %}
 
 <form action="/comp/{{compid}}/download" method="POST"

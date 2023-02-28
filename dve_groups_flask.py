@@ -19,6 +19,8 @@ app.config.update(
 def give_name():
     if 'name' not in session:
         session['name'] = None
+    if 'id' not in session:
+        session['id'] = None
 
 @app.route('/')
 def home():
@@ -53,10 +55,12 @@ def logged_in():
             me = get_me(session['token'])
             if me.status_code == 200:
                 user_name = json.loads(me.content)['me']['name']
+                user_id = int(json.loads(me.content)['me']['id'])
                 session['name'] = user_name
+                session['id'] = user_id
             else:
                 return f"Some error occured: {me.status_code}, {me.content}"
-        comps = get_coming_comps(session['token'])
+        comps = get_coming_comps(session['token'],session['id'])
         return render_template('logged_in.html',user_name=session['name'],comps=comps)   
     else:
         return "You are currently not authorized. Either go to the playground or ensure you are logged in."

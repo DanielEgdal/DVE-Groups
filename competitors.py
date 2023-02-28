@@ -33,9 +33,8 @@ def competitorBasicInfo(data,authorized=True):
     year = int(datetime.now().strftime("%Y"))
     organizers = set()
     delegates = []
-    # print(data)
     for person in data['persons']:
-        try:
+        if person['registration']:
             if person['registration']['status'] == 'accepted':
                 debuff = 0
                 competitor = Competitor(person["name"],person['registrantId'],person['countryIso2'],person['gender'],person['wcaId'])
@@ -82,6 +81,4 @@ def competitorBasicInfo(data,authorized=True):
                     if event != '333fm':
                         competitor.events.add(event)
                 comp_dict[person["name"]] = competitor
-        except TypeError:
-            pass
     return comp_dict,organizers, delegates
