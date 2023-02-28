@@ -219,7 +219,7 @@ def convertCompetitorCountToGroups(count,stations,event):
     expectedGroupNumber = ceil(count/stations)
     if expectedGroupNumber < 2:
         print("just one group for a subseq rounds, check if this inteded")
-        print("manually bumping to 2",event)
+        print("manually bumping to 2",event[0])
         expectedGroupNumber+=1
     return expectedGroupNumber
 

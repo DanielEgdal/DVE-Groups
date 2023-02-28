@@ -118,11 +118,13 @@ def generate_n_download(compid):
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
+                    pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
                 else:
                     wcif,statusCode =  getWCIFPublic(compid)
                     session['postToWCIF']  = False
+                    pdfs_to_user = callAll(wcif,header= None,stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
                 
-                pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
+                
                 
                 if session['stages'] > 1:
                     scorecardObj = pdfs_to_user.pop()
