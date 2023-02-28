@@ -87,7 +87,8 @@ def splitNonOverlapGroups(scheduleInfo,personInfo,event,fixed=True):
 
 def combinedDelegateAssigning(scheduleInfo:Schedule,personInfo:dict[str,Competitor],competitorList,setOfEvents,overallInGroup,overallGroup):
     for delegate in scheduleInfo.delegates:
-        competitorList.remove(delegate)
+        if delegate in competitorList:
+            competitorList.remove(delegate)
     d1,d2 = scheduleInfo.delegates[::2],scheduleInfo.delegates[1::2]
     for group,delegates in enumerate([d1,d2]):
         for stationNumber, competitor in enumerate(delegates):
