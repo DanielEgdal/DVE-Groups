@@ -24,6 +24,8 @@ def CSVForScorecards(scheduleInfo,personInfo,combined):
                 if event[0][:-1] == '333mbf':
                     mbldDone = True
                     header+=',333mbf'
+                else:
+                    header+=f',{event[0]}'
             elif event[0][:-1] != '333mbf':
                 header+=f',{event[0]}'
 
