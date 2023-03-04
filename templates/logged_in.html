@@ -6,9 +6,9 @@
         <ul class="my_comps">
         {% for comp in comps%}
             {% if comp[2] %}
-            <li class="checkbox"> <a href="/{{comp[1]}}">{{comp[0]}}</a> </li>
+            <li class="checkbox"> <a href="comp/{{comp[1]}}">{{comp[0]}}</a> </li>
             {% else %}
-            <li> <a href="/{{comp[1]}}">{{comp[0]}}</a> </li>
+            <li> <a href="comp/{{comp[1]}}">{{comp[0]}}</a> </li>
             {% endif %}
         
         {% endfor %}
