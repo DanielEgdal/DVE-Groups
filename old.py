@@ -16,7 +16,7 @@ from maxpq import MaxPQ
 from competitors import competitorBasicInfo, Competitor
 from schedule import scheduleBasicInfo, Schedule, combineEvents
 from pdf_creation import *
-from WCIFManip import *
+from WCIFManipGroups import *
 from scorecards import *
 from group_polishing import *
 from make_groups import *

@@ -8,7 +8,8 @@ Notes on install, for ubuntu to get the fonts do `apt-get install fonts-dejavu-e
 
 Todo:
 
-* Remove the old way of handling combined events, handle combined events better
+* Do proper logging and save it to zip. (Import to check through in case a competitor somehow got removed)
+* Make a button blank scorecards.
 
 QoL:
 

@@ -241,7 +241,7 @@ def getSubSeqGroupCount(fixedCompetitors,scheduleInfo):
     else: # Waiting area
         raise NotImplementedError
 
-def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed,customGroups=[False], combinedEvents=None,allCombinedEvents=[[]],just1GroupofBigBLD=True): # Custom groups is a dict, combined evnets is touple
+def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed,customGroups=[False], combinedEvents=None,allCombinedEvents=[[]],just1GroupofBigBLD=True) -> Schedule: # Custom groups is a dict, combined evnets is touple
     """
     Get all the basic information for the schedule. 
     Doesn't store which stage events appear on, but will look into if events overlap (but not fully)

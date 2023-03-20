@@ -1,7 +1,7 @@
 from competitors import competitorBasicInfo, Competitor
 from schedule import scheduleBasicInfo, Schedule, combineEvents
 from pdf_creation import *
-from WCIFManip import *
+from WCIFManipGroups import *
 from scorecards import *
 from group_polishing import *
 from make_groups import *
@@ -45,6 +45,6 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     stages = 1 if not stages else stages
     file_extension = 'pdf' if stages == 1 else 'zip'
     per_stage = int(stations/stages)
-    scorecards = genScorecards(scorecardCSV,timelimitCSV,name,stages,per_stage,False) 
+    scorecards = genScorecards(scorecardCSV,timelimitCSV,schedule.longName,stages,per_stage,False) 
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview

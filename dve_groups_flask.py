@@ -2,7 +2,7 @@ from flask import session, Flask, render_template,request,redirect,url_for,jsoni
 import json, re
 from markupsafe import escape
 from secret_key import secret_key
-from WCIFManip import *
+from WCIFManipGroups import *
 from run_main import *
 import io
 import zipfile
