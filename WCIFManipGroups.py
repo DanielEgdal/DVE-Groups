@@ -8,16 +8,6 @@ import pytz
 from pandas import Timestamp
 import os
 
-def genTokenLengthy():
-    subprocess.Popen(["python3 flaskServer.py"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
-    webpage = "https://www.worldcubeassociation.org/oauth/authorize?client_id=8xB-6U1fFcZ9PAy80pALi9E7nzfoF44W4cMPyIUXrgY&redirect_uri=http%3A%2F%2Flocalhost%3A8001&response_type=code&scope=manage_competitions+public"
-    webbrowser.get("x-www-browser").open(webpage,new=0)
-    # token = clientTest()
-    # print(token)
-    sleep(1)
-    # print(token)
-    # return token
-
 def get_me(header):
     return requests.get("https://www.worldcubeassociation.org/api/v0/me",headers=header)
     
@@ -28,7 +18,6 @@ def get_coming_comps(header,userid):
     regged_comps_json = json.loads(requests.get(f"https://www.worldcubeassociation.org/api/v0/users/{userid}?upcoming_competitions=true&ongoing_competitions=true",headers=header).content)
     upcoming = regged_comps_json['upcoming_competitions']
     ongoing = regged_comps_json['ongoing_competitions']
-    # print(regged_comps_json['user'].keys())
     
     comps = comps + [(comp['name'],comp['id'],False,comp['end_date']) for comp in upcoming if (comp['name'],comp['id'],True,comp['end_date']) not in comps]
     comps = comps + [(comp['name'],comp['id'],False,comp['end_date']) for comp in ongoing if (comp['name'],comp['id'],True,comp['end_date']) not in comps]
@@ -121,7 +110,6 @@ def createChildActivityWCIF(data,scheduleInfo):
                 if ((eventSplit[1][-1] == '1' and len(eventSplit) == 2) and eventSplit[0] in scheduleInfo.groupTimes) or len(eventSplit) > 2 or (eventSplit[0] in scheduleInfo.combinedEvents and eventSplit[1][-1] == '1'):
                     if eventSplit[0] == '333mbf':
                         eventSplit[0] = f'333mbf{eventSplit[2][-1]}'
-                        # print(eventSplit) 
                     if eventSplit[0] in scheduleInfo.combinedEvents:
                         eventt = "-".join(scheduleInfo.combinedEvents)
                     else:
@@ -178,22 +166,12 @@ def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
         if type(person['registration']) == dict:
             if person['registration']['status'] == 'accepted':
                 for event in personInfo[person['name']].groups:
-                    # if event in scheduleInfo.combinedEvents:
-                    # 	eventt = "-".join(scheduleInfo.combinedEvents)
-                    # else:
-                    # 	eventt = event
-                    # print(eventt)
-                    # print(scheduleInfo.childActivityMapping.keys())
                     data['persons'][pid]['assignments'].append(deepcopy(assignmentTemplate))
                     data['persons'][pid]['assignments'][depth]['activityId'] = scheduleInfo.childActivityMapping[event][personInfo[person['name']].groups[event]]
                     data['persons'][pid]['assignments'][depth]['stationNumber'] = personInfo[person['name']].stationNumbers[event]
                     depth+=1
 
                 for event in personInfo[person['name']].assignments:
-                    # if event in scheduleInfo.combinedEvents:
-                    # 	eventt = "-".join(scheduleInfo.combinedEvents)
-                    # else:
-                    # 	eventt = event
                     for assignment in personInfo[person['name']].assignments[event]:
                         data['persons'][pid]['assignments'].append(deepcopy(assignmentTemplate))
                         if type(assignment) == int:

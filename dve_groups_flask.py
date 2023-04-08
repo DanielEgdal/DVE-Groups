@@ -34,7 +34,7 @@ def logout():
     return redirect(url_for('home'))
         
 
-@app.route('/show_token') # If we can get SSL/Https, then this function might be able to display the code. Or better, oauth can happen as intended.
+@app.route('/show_token')
 def show_token():
     return render_template('show_token.html',user_name=session['name'])
 
@@ -44,6 +44,10 @@ def process_token():
     access_token= access_token_temp.split('access_token=')[1].split('&')[0]
     session['token'] = {'Authorization':f"Bearer {access_token}"}
     return "Redirect should be happening to /me. Otherwise do it manually."
+
+@app.route('/localhost')
+def localhost():
+    return redirect("https://www.worldcubeassociation.org/oauth/authorize?client_id=8xB-6U1fFcZ9PAy80pALi9E7nzfoF44W4cMPyIUXrgY&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fshow_token&response_type=token&scope=manage_competitions+public")
 
 @app.route('/me', methods = ['POST', 'GET'])
 def logged_in():
@@ -126,7 +130,7 @@ def generate_n_download(compid):
                 
                 
                 
-                if session['stages'] > 1:
+                if session['stages'] > 1: # This is because scorecards might be stored as zip. Rest of files is done below.
                     scorecardObj = pdfs_to_user.pop()
                     scorecardZip = zipfile.ZipFile(io.BytesIO(scorecardObj[-1]))
                     for name in scorecardZip.namelist():
@@ -137,6 +141,7 @@ def generate_n_download(compid):
                 with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
                     for file_name,data in pdfs_to_user:
                         zip_file.writestr(file_name, data)
+            
                 zipFiles = Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
                 return zipFiles
         else:
@@ -160,7 +165,5 @@ def combinedEventsExplanation():
             }
     return jsonify(data)
     
-# app.run(debug=True)
-
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(port=5000,debug=True)

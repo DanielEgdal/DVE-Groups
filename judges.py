@@ -194,7 +194,6 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,fixedSeating=True):
 
 
 def assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo):
-    print('hej')
     scheduleInfo.groupJudges[event] = {}
     groups = scheduleInfo.groups[event]
     atleast1 = set() # Make sure everyone judges at least once before giving two assignments to other people

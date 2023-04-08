@@ -1,6 +1,8 @@
 # DVE-Groups
 
-My application for generating groups for first rounds of WCA competitions. The aim is to get it online at http://tools.danskspeedcubingforening.dk/ so it is more user friendly.
+My application for generating groups for first rounds of WCA competitions. 
+
+It will be moved online to http://groups.danskspeedcubingforening.dk/
 
 Additionally useful PDF's are generated to organisers. The program makes use of a slight modification of [Anker's scorecards](https://github.com/Daniel-Anker-Hermansen/WCA_tools_lib/tree/main/wca_scorecards_lib) for scorecards.
 
@@ -10,6 +12,7 @@ Todo:
 
 * Do proper logging and save it to zip. (Import to check through in case a competitor somehow got removed)
 * Make a button blank scorecards.
+* Double check that the overlapping events is working correctly.
 
 QoL:
 
