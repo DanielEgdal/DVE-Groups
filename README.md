@@ -10,11 +10,9 @@ Notes on install, for ubuntu to get the fonts do `apt-get install fonts-dejavu-e
 
 Todo:
 
-* Do proper logging and save it to zip. (Import to check through in case a competitor somehow got removed)
-* Make a button blank scorecards.
 * Double check that the overlapping events is working correctly.
+* Add option for specifying a concrete number of groups for certain events.
 
 QoL:
 
-* Make more CSS to improve UI.
 * Create extensions, and auto load them into the form.

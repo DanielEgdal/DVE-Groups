@@ -87,9 +87,9 @@ def comp_page(compid):
                     if 'stations' in wcif['extensions'][0]['data']:
                         session['pre_stations'] = wcif['extensions'][0]['data']['stations']
                     else:
-                        session['pre_stations'] = None
+                        session['pre_stations'] = 10
                 else:
-                    session['pre_stations'] = None
+                    session['pre_stations'] = 10
             else:
                 session['canAdminComp'] = False
                 session['pre_stations'] = None

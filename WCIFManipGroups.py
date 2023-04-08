@@ -50,18 +50,17 @@ def getWCIFPublic(id):
     wcif = requests.get(f"https://www.worldcubeassociation.org/api/v0/competitions/{id}/wcif/public")
     return json.loads(wcif.content),wcif.status_code
 
-def postWcif(id,wcif,header):
+def postWcif(id,wcif,header,text_log):
     r = requests.patch(f"https://www.worldcubeassociation.org/api/v0/competitions/{id}/wcif", json=wcif,headers=header)
-    print(r)
-    print(r.content)
+    text_log.write(f"Status code of post wcif: {r}. {r.content} \n")
 
-def doEntireWCIFPost(compid,data,people,schedule,header):
+def doEntireWCIFPost(compid,data,people,schedule,header,text_log):
     updateScrambleCount(data,schedule)
     cleanChildActivityWCIF(data,schedule)
     cleanAssignmentsWCIF(data)
     createChildActivityWCIF(data,schedule)
     enterPersonActivitiesWCIF(data,people,schedule)
-    postWcif(compid,data,header)
+    postWcif(compid,data,header,text_log)
 
 def updateScrambleCount(data,scheduleInfo): 
     for idx,event in enumerate(data['events']): 

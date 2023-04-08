@@ -1,6 +1,7 @@
 import math, random
 from schedule import Schedule
 from maxpq import MaxPQ
+import os
 
 def assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used):
     while not pq.is_empty() and len(scheduleInfo.groupJudges[event][groupNum]) < needed:
@@ -38,8 +39,8 @@ def getAssignmentAlreadyInEvent(scheduleInfo,personInfo,event,groupNum,pq,used):
             if comp not in scheduleInfo.groups[event][groupNum]:
                 pq.insert([comp,math.log((len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
 
-def placePeopleInVenueInPQ(scheduleInfo,personInfo,event,groupNum,pq,used):
-    print(f"Grabbing people not signed up as judges for {event} g{groupNum} ")
+def placePeopleInVenueInPQ(scheduleInfo,personInfo,event,groupNum,pq,used,text_log):
+    text_log.write(f"Grabbing people not signed up as judges for {event} g{groupNum} \n")
     for comp in scheduleInfo.inVenue[event]:
         if comp not in used and not comp in scheduleInfo.groups[event][groupNum]:
             if comp in scheduleInfo.delegates:
@@ -56,7 +57,7 @@ def assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1
         atleast1.add(judge) 
         used.add(judge)
 
-def judgePQOverlap(combination,scheduleInfo,personInfo,fixedSeating=True): 
+def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=True): 
     random.shuffle(combination)
     if fixedSeating:
         missing = 0
@@ -115,7 +116,7 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,fixedSeating=True):
                     assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
                     if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
                         missing += needed-len(scheduleInfo.groupJudges[event][groupNum])
-                        # print(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed}")
+                        # text_log.write(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed} \n") # This will be called in the simulation
         return missing
     else:
         missing = 0
@@ -189,11 +190,11 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,fixedSeating=True):
                     assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
                     if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
                         missing += needed-len(scheduleInfo.groupJudges[event][groupNum])
-                        # print(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed}")
+                        # text_log.write(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed} \n")
         return missing
 
 
-def assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo):
+def assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo,text_log):
     scheduleInfo.groupJudges[event] = {}
     groups = scheduleInfo.groups[event]
     atleast1 = set() # Make sure everyone judges at least once before giving two assignments to other people
@@ -210,14 +211,14 @@ def assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo):
             assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used)
         
         if len(scheduleInfo.groupJudges[event][groupNum]) < needed: # If more people are needed, try all in the venue
-            placePeopleInVenueInPQ(scheduleInfo,personInfo,event,groupNum,pq,used)
+            placePeopleInVenueInPQ(scheduleInfo,personInfo,event,groupNum,pq,used,text_log)
             assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used)
             if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
-                print(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed}")
+                text_log.write(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed} \n")
 
-def judgePQNonOverlap(event,scheduleInfo,personInfo,fixedSeating=True):
+def judgePQNonOverlap(event,scheduleInfo,personInfo,text_log,fixedSeating=True):
     if fixedSeating:
-        assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo)
+        assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo,text_log)
     else:
         if (event not in ['no event here']): # Give just one assignment in the event per competitor
             scheduleInfo.groupJudges[event] = {}
@@ -231,9 +232,9 @@ def judgePQNonOverlap(event,scheduleInfo,personInfo,fixedSeating=True):
                 personInfo[competitor].totalAssignments +=1
                 personInfo[competitor].assignments[event].append(group_to_place)
         else: # Get more staff to reduce downtime
-            assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo)
+            assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo,text_log)
 
-def assignJudges(scheduleInfo:Schedule,personInfo,fixedSeating= True,dontAssign=True,mixed={}):
+def assignJudges(scheduleInfo:Schedule,personInfo,text_log,fixedSeating= True,dontAssign=True,mixed={}):
     """
     Judge assignments for overlapping events is being called together with splitIntoOverapGroups, 
     as I still need to do simulations to find the best combo for judges.
@@ -244,36 +245,44 @@ def assignJudges(scheduleInfo:Schedule,personInfo,fixedSeating= True,dontAssign=
                 if (event[0] not in scheduleInfo.overlappingEvents) and (event[0] not in scheduleInfo.setOfCombinedEvents):
                     if mixed:
                         if event[0] in mixed:
-                            judgePQNonOverlap(event[0],scheduleInfo,personInfo,True)
+                            judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,True)
                         else:
-                            judgePQNonOverlap(event[0],scheduleInfo,personInfo,False)
+                            judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,False)
                     else:
-                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,fixedSeating)
+                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,fixedSeating)
     else:
         for event in scheduleInfo.events:
             if (event[0] not in scheduleInfo.overlappingEvents) and (event[0] not in scheduleInfo.setOfCombinedEvents):
                 if mixed:
                     if event[0] in mixed:
-                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,True)
+                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,True)
                     else:
-                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,False)
+                        judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,False)
                 else:
-                    judgePQNonOverlap(event[0],scheduleInfo,personInfo,fixedSeating)
+                    judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,fixedSeating)
 
 
-def reassignJudges(scheduleInfo,personInfo,blacklist = {None},fixed=True, mixed={}):
+def reassignJudges(scheduleInfo,personInfo,text_log,fixed=True, mixed={}):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filename = os.path.join(script_dir, 'sblacklist.txt')
+    blacklist = set()
+    if os.path.exists(filename):
+        with open(filename) as f:
+            for line in f:
+                blacklist.add(line.strip())
+
     for event in scheduleInfo.groups:
         scheduleInfo.groupScramblers[event] = {}
         scheduleInfo.groupRunners[event] = {}
         if mixed:
             if event in mixed:
-                reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist,True)
+                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,True)
             else:
-                reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist,False)
+                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,False)
         else:
-            reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist,fixed)
+            reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,fixed)
 
-def reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist = {None},fixed=True):
+def reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist = {None},fixed=True):
     for groupNum in scheduleInfo.groups[event]:
             scheduleInfo.groupScramblers[event][groupNum] = []
             scheduleInfo.groupRunners[event][groupNum] = []
@@ -283,12 +292,12 @@ def reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist = {None},fixed=
                 if event in scheduleInfo.groupJudges:
                     if len(scheduleInfo.groupJudges[event][groupNum]) > 0: # If judges are assigned for the event
                         # Always at least one scrambler
-                        reassignToScrambler(event,groupNum,scheduleInfo,personInfo,blacklist,fixed)
+                        reassignToScrambler(event,groupNum,scheduleInfo,personInfo,text_log, blacklist,fixed)
                         # Alternate runner/scrambler. Only continue if there is enough judges available
 
                         while len(scheduleInfo.groups[event][groupNum])< len(scheduleInfo.groupJudges[event][groupNum]): # Scramblers
                             if len(scheduleInfo.groupScramblers[event][groupNum]) <= len(scheduleInfo.groupRunners[event][groupNum]):
-                                reassignToScrambler(event,groupNum,scheduleInfo,personInfo,blacklist,fixed)
+                                reassignToScrambler(event,groupNum,scheduleInfo,personInfo, text_log, blacklist,fixed)
                             else: # Runners
                                 reassignToRunner(event,groupNum,scheduleInfo,personInfo,blacklist,fixed)
         else: ####
@@ -296,13 +305,13 @@ def reassignJudgesEvents(event,scheduleInfo,personInfo,blacklist = {None},fixed=
                 if event in scheduleInfo.groupJudges:
                     if len(scheduleInfo.groupJudges[event][groupNum]) > 0: # If judges are assigned for the event
                         # Always at least one scrambler
-                        reassignToScrambler(event,groupNum,scheduleInfo,personInfo,blacklist,fixed)
+                        reassignToScrambler(event,groupNum,scheduleInfo,personInfo,text_log, blacklist,fixed)
                         
                         # Just scramblers, continue until you have enough
                         scramblersNeeded = determineScrambleCount(scheduleInfo,personInfo,event,groupNum)
                         while scramblersNeeded> len(scheduleInfo.groupScramblers[event][groupNum]) and len(scheduleInfo.groupJudges[event][groupNum]) > 1:
                             # scrmbler stuff
-                            reassignToScrambler(event,groupNum,scheduleInfo,personInfo,blacklist,fixed)
+                            reassignToScrambler(event,groupNum,scheduleInfo,personInfo, text_log,blacklist,fixed)
 
 
 def reassignToRunner(event,group,scheduleInfo,personInfo,blacklist = {None},fixed=True): 
@@ -355,7 +364,7 @@ def reassignToRunner(event,group,scheduleInfo,personInfo,blacklist = {None},fixe
             if assignment == group:
                 personInfo[runner].assignments[event][idx] = f';R{group}'
 
-def reassignToScrambler(event,group,scheduleInfo,personInfo,blacklist = {None},fixed=True):
+def reassignToScrambler(event,group,scheduleInfo,personInfo,text_log,blacklist = {None},fixed=True):
     scheduleInfo.groupJudges[event][group].sort(key=lambda x:personInfo[x].prs[event]*personInfo[x].orga)
     scrambler = ''
     passed = False
@@ -387,7 +396,7 @@ def reassignToScrambler(event,group,scheduleInfo,personInfo,blacklist = {None},f
                 break
     if not passed:
         scrambler = scheduleInfo.groupJudges[event][group][0] # Take the fastest if no one is old enough
-        print('passing scram',group,event,scrambler)
+        text_log.write(f'passing scram {group} {event} {scrambler} \n')
     if fixed:
         for idx,g in enumerate(personInfo[scrambler].assignments[event]):
             if type(g)==str:

@@ -4,7 +4,7 @@ from collections import Counter
 from judges import * 
 import random
 
-def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
+def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,text_log,fixed):
     """
     Assigns groups for all overlapping events at the same time, and does assignments.
     As I could not find a proper deterministic manner of getting judges and competitors,
@@ -133,7 +133,7 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
                                         personInfo[delegate].groups[event] = idy+1
                                         assigned =True
                 if not assigned:
-                    print('failed', delegate, event)
+                    text_log.write(f'failed {delegate} {event} \n')
                     for idy in groupNumList:
                         checkLegal = True
                         for event2 in personInfo[delegate].groups:
@@ -146,7 +146,7 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
                             scheduleInfo.groups[event][idy+1].append(delegate)
                             personInfo[delegate].groups[event] = idy+1
                             assigned =True
-                            print('fixed',delegate,event,idy+1)
+                            text_log.write(f'fixed {delegate} {event} {idy+1} \n')
                             break
                     
 
@@ -191,7 +191,6 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
                                             checkLegal = True
                                             for event2 in pes2[p2[0]].groups:
                                                 if event2 in combination:
-                                                    # if event in ('skewb','444') and event2 in ('skewb','444'):
                                                     if not sh2.groupTimeChecker(sh2.groupTimes[event][idy+1],sh2.groupTimes[event2][pes2[p2[0]].groups[event2]]):
                                                         pass # Check that they don't have an overlapping event
                                                     else:
@@ -207,7 +206,7 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
                                     failed_people.append((p2[0],event))
                     p2 = p2[1:]
                 j -=1
-            missing = judgePQOverlap(combination,sh2,pes2,fixed) # Perform assignment of staff
+            missing = judgePQOverlap(combination,sh2,pes2,text_log,fixed) # Perform assignment of staff
             score = (fails*100) + missing +(extras*0.75)
             if score < few_fails: # If there is fewer missing staff
                 few_fails = score
@@ -222,9 +221,9 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,fixed):
     personInfo = deepcopy(bpes2)
 
     if few_fails > 0:
-        print(f"{combination}: Totally missing {few_comp} competitors, and {few_mis} assignments. Some extra people ({few_extras*2}). {final_failed_people}")
+        text_log.write(f"{combination}: Totally missing {few_comp} competitors, and {few_mis} assignments. Some extra people ({few_extras*2}). {final_failed_people} \n")
     else:
-        print(f'sucess in overlapping events ({combination})')
+        text_log.write(f'sucess in overlapping events ({combination}) \n')
     return scheduleInfo,personInfo # For some reason it does not update the variables
 
 

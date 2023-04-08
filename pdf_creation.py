@@ -234,7 +234,7 @@ def eventPatch(personInfo,personlist,scheduleInfo,progress,event,ln,pdf,mixed={}
     scram = 'Bland:' if personInfo[personlist[progress].name].citizenship == 'DK' else 'Scramb:'
     run = 'Løb:' if personInfo[personlist[progress].name].citizenship == 'DK' else 'Run:'
 
-    strlist = sorted([f'{val}' if len(str(val)) ==1 else f'{val[1:]}' for val in personInfo[personlist[progress].name].assignments[event]])
+    strlist = sorted([f'{val}' if len(str(val)) ==1 else f'{str(val)[1:]}' for val in personInfo[personlist[progress].name].assignments[event]])
     if strlist:
         if str(strlist[0][0]) in '123456789':
             sttr = f"{judge} "+', '.join(strlist)

@@ -140,7 +140,7 @@ def combinedEventAssigning(scheduleInfo:Schedule,personInfo:dict[str,Competitor]
         else:
             raise NotImplementedError
 
-def splitIntoGroups(scheduleInfo:Schedule,personInfo,fixed=True):
+def splitIntoGroups(scheduleInfo:Schedule,personInfo,text_log,fixed=True):
     
     if scheduleInfo.setOfCombinedEvents:
         combinedEventAssigning(scheduleInfo,personInfo)
@@ -161,7 +161,7 @@ def splitIntoGroups(scheduleInfo:Schedule,personInfo,fixed=True):
                             tempSet.add(toAdd)
                     combination = combination.union(tempSet)
                 combinationList = deepcopy(list(combination)) # For the sake of simulations. 
-                scheduleInfo, personInfo = splitIntoOverlapGroups(scheduleInfo, personInfo, combinationList,fixed) # For some reason it does not update the variables
+                scheduleInfo, personInfo = splitIntoOverlapGroups(scheduleInfo, personInfo, combinationList, text_log, fixed) # For some reason it does not update the variables
                 already = already.union(combination) # Don't repeat the same combo of overlaps
 
     return scheduleInfo, personInfo # For some reason it does not update the variables for the overlapping events

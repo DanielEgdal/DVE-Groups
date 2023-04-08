@@ -203,44 +203,43 @@ def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False]
                         scheduleInfo.stationOveriew[event][amount] = {}
                         scheduleInfo.groupJudges[event][amount] = []
 
-def advancementCalculation(Type,level,competitorCount):
+def advancementCalculation(Type,level,competitorCount,event,text_log):
     if Type == "percent":
         return int((level/100) * competitorCount)
     elif Type == "ranking":
         return level
     elif Type == "attemptResult":
-        print('Dont know how many will get under X, setting 75%')
+        text_log.write(f'Dont know how many will get under X for {event[0]}, setting 75% \n')
         return int(competitorCount * 0.75)
     else:
-        print("got a non existing type")
-        raise NotImplementedError
+        raise NotImplementedError("got a non existing type")
 
-def convertCompetitorCountToGroups(count,stations,event):
+def convertCompetitorCountToGroups(count,stations,event,text_log):
     expectedGroupNumber = ceil(count/stations)
     if expectedGroupNumber < 2:
-        print("just one group for a subseq rounds, check if this inteded. Manually bumping to 2",event[0])
+        text_log.write(f"just one group for a subseq rounds, check if this inteded. Manually bumping to 2 {event[0]} \n")
         expectedGroupNumber+=1
     return expectedGroupNumber
 
-def getSubSeqGroupCount(fixedCompetitors,scheduleInfo):
+def getSubSeqGroupCount(fixedCompetitors,scheduleInfo,text_log):
     if fixedCompetitors:
         for event in scheduleInfo.entire:
             if event[0][-1] == '2':
-                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][1][0],scheduleInfo.advancements[event[0][:-1]][1][1],len(scheduleInfo.eventCompetitors[event[0][:-1]]))
+                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][1][0],scheduleInfo.advancements[event[0][:-1]][1][1],len(scheduleInfo.eventCompetitors[event[0][:-1]]),event,text_log)
                 scheduleInfo.subSeqAmountCompetitors[event[0]] = proceeding
-                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations,event)
+                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations,event,text_log)
             elif event[0][-1] == '3':
-                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][2][0],scheduleInfo.advancements[event[0][:-1]][2][1],scheduleInfo.subSeqAmountCompetitors[event[0][:-1]+'2'])
+                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][2][0],scheduleInfo.advancements[event[0][:-1]][2][1],scheduleInfo.subSeqAmountCompetitors[event[0][:-1]+'2'],event,text_log)
                 scheduleInfo.subSeqAmountCompetitors[event[0]] = proceeding
-                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations, event)
+                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations, event,text_log)
             elif event[0][-1] == '4':
-                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][3][0],scheduleInfo.advancements[event[0][:-1]][3][1],scheduleInfo.subSeqAmountCompetitors[event[0][:-1]+'3'])
+                proceeding = advancementCalculation(scheduleInfo.advancements[event[0][:-1]][3][0],scheduleInfo.advancements[event[0][:-1]][3][1],scheduleInfo.subSeqAmountCompetitors[event[0][:-1]+'3'],event,text_log)
                 scheduleInfo.subSeqAmountCompetitors[event[0]] = proceeding
-                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations, event)
+                scheduleInfo.subSeqGroupCount[event[0]] = convertCompetitorCountToGroups(proceeding,scheduleInfo.amountStations, event,text_log)
     else: # Waiting area
         raise NotImplementedError
 
-def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed,customGroups=[False], combinedEvents=None,allCombinedEvents=[[]],just1GroupofBigBLD=True) -> Schedule: # Custom groups is a dict, combined evnets is touple
+def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed,text_log,customGroups=[False], combinedEvents=None,allCombinedEvents=[[]],just1GroupofBigBLD=True) -> Schedule: # Custom groups is a dict, combined evnets is touple
     """
     Get all the basic information for the schedule. 
     Doesn't store which stage events appear on, but will look into if events overlap (but not fully)
@@ -382,7 +381,7 @@ def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed
                 schedule.advancements[eventNRound[0]][int(eventNRound[1][1])] = (advancement['type'],int(advancement['level']))
             else:
                 schedule.advancements[eventNRound[0]][int(eventNRound[1][1])] = (None,0)
-    getSubSeqGroupCount(1,schedule)
+    getSubSeqGroupCount(1,schedule,text_log)
     schedule.getSubSeqGroupTimes()
     if schedule.mbldCounter:
         for i in range(1,schedule.mbldCounter+1):
