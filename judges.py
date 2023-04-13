@@ -267,7 +267,7 @@ def reassignJudges(scheduleInfo,personInfo,text_log,fixed=True, mixed={}):
     filename = os.path.join(script_dir, 'sblacklist.txt')
     blacklist = set()
     if os.path.exists(filename):
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             for line in f:
                 blacklist.add(line.strip())
 
