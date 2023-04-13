@@ -110,7 +110,7 @@ def createChildActivityWCIF(data,scheduleInfo):
                     if eventSplit[0] == '333mbf':
                         eventSplit[0] = f'333mbf{eventSplit[2][-1]}'
                     if eventSplit[0] == '333fm':
-                        eventSplit[0] = f'333fm{eventSplit[2][-1]}'
+                        continue
                     if eventSplit[0] in scheduleInfo.combinedEvents:
                         eventt = "-".join(scheduleInfo.combinedEvents)
                     else:
