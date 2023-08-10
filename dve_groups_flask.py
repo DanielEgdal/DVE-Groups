@@ -111,6 +111,7 @@ def generate_n_download(compid):
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
                 session['combinedEvents'] = escape(form_data["combinedEvents"]).strip().lower()
+                session['eventGroups'] = escape(form_data["eventGroups"]).strip().lower()
                 if not session['combinedEvents']:
                     session['combinedEvents'] = [[]]
                 else:
@@ -119,14 +120,24 @@ def generate_n_download(compid):
                     for sett in setsOfCombEvents:
                         allOfCombEvents.append([event.strip() for event in sett.split(',')])
                     session['combinedEvents'] = allOfCombEvents
+                if not session['eventGroups']:
+                    session['eventGroups'] = {}
+                else:
+                    eventGroupString = session['eventGroups'].split(',')
+                    temp = {}
+                    for pair in eventGroupString:
+                        event, groupCount = pair.split(':')
+                        groupCount = int(groupCount)
+                        temp[event] = groupCount
+                    session['eventGroups'] = temp
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
-                    pdfs_to_user = callAll(wcif,header= session['token'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
+                    pdfs_to_user = callAll(wcif,header= session['token'],customGroups=session['eventGroups'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
                 else:
                     wcif,statusCode =  getWCIFPublic(compid)
                     session['postToWCIF']  = False
-                    pdfs_to_user = callAll(wcif,header= None,stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
+                    pdfs_to_user = callAll(wcif,header= None,stations=session['stations'],customGroups=session['eventGroups'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
                 
                 
                 
@@ -165,5 +176,15 @@ def combinedEventsExplanation():
             }
     return jsonify(data)
     
+@app.route("/wcif-extensions/CustomGroups")
+def CustomGroupsExplanation():
+    data = {"description":"Force events to have a specific amount of groups, regardless of the stations available. Events not mentioned will have the amount of groups determined by the amount of stations. Remember that you have to use event IDs!",
+            "options":{
+        'Empty':"Not writing anything in the field will ignore the feature.",
+            "One specification":"You will write a colon `:` between the event and the amount of groups. E.g. `pyram:3` means 3 groups of pyraminx",
+            "Multiple specifications":"You will write a colon `:` between the event and the amount of groups, and have to comma seperate all the events. E.g. `pyram:3,skewb:2` means 3 groups of pyraminx, and 2 groups of skewb.",}
+            }
+    return jsonify(data)
+
 if __name__ == '__main__':
     app.run(port=5000,debug=True)

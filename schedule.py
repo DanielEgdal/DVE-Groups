@@ -166,7 +166,7 @@ def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False]
             scheduleInfo.stationOveriew[event] = {}
             for amount in range(1,custom[event]+1):
                 scheduleInfo.groups[event][amount] = []
-                scheduleInfo.stationOveriew[amount] = {}
+                scheduleInfo.stationOveriew[event][amount] = {}
     if just1[0]:
         for event in just1:
             if (event in scheduleInfo.eventWOTimes) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
