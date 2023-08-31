@@ -159,6 +159,41 @@ def generate_n_download(compid):
             return fail_string
     return fail_string
 
+@app.route("/comp/<compid>/existing_groups",methods=['POST'])
+def existing_groups_flask(compid):
+    fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
+    escapedCompid = escape(compid)
+    if len(escapedCompid) <= 32:
+        pattern = re.compile("^[a-zA-Z\d]+$")
+        if pattern.match(escapedCompid):
+            if session['canAdminComp']:
+                wcif,statusCode =  getWcif(compid,session['token'])
+            else:
+                wcif,statusCode =  getWCIFPublic(compid)
+            form_data = request.form
+            session['stages'] = int(escape(form_data["stages"]))
+            
+            pdfs_to_user = existing_groups(wcif,session['canAdminComp'],session['stages'])
+
+            if session['stages'] > 1: # This is because scorecards might be stored as zip. Rest of files is done below.
+                scorecardObj = pdfs_to_user.pop()
+                scorecardZip = zipfile.ZipFile(io.BytesIO(scorecardObj[-1]))
+                for name in scorecardZip.namelist():
+                    with scorecardZip.open(name, 'r') as pdf_file:
+                        pdfs_to_user.append((name,pdf_file.read()))
+            
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                for file_name,data in pdfs_to_user:
+                    zip_file.writestr(file_name, data)
+        
+            zipFiles = Response(zip_buffer.getvalue(),mimetype="application/zip",headers={'Content-Disposition': f'attachment;filename={compid}Files.zip'})
+            return zipFiles
+        else:
+            return fail_string
+    return fail_string
+    
+
 @app.route("/wcif-extensions/CompetitionConfig.json")
 def spec_url():
     data = {'description':"The tool used to generate scorecards for most first rounds. More documentation will follow later. This is kind of a mess rn."

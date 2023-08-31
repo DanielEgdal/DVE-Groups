@@ -56,3 +56,17 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     # It is important that scorecards is the last object in the list.
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview
+
+def existing_groups(wcif,authorized,stages):
+    # TODO also add comp patches
+    people,organizers,delegates = competitorBasicInfo(wcif,authorized)
+    reglist = getRegList(people)
+
+    scorecards,stations = readExistingAssignments(wcif, stages)
+
+    file_extension = 'pdf' if stages == 1 else 'zip'
+    # if stations%stages != 0:
+    #     text_log.write("The amount of stages is not a valid devisor for your stations. There might be a bug. \n")
+    
+    name = wcif['id']
+    return [(f"{name}Checkinlist.pdf",reglist),(f"{name}Scorecards.{file_extension}",scorecards)]

@@ -1,11 +1,13 @@
 import subprocess
 from copy import deepcopy
+from collections import defaultdict
 from time import sleep
 import json
 from datetime import timedelta
 import webbrowser,requests
 import pytz
 from pandas import Timestamp
+from scorecards import genScorecards
 import os
 
 def get_me(header):
@@ -201,3 +203,99 @@ def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
                                 data['persons'][pid]['assignments'][depth]['activityId'] = scheduleInfo.childActivityMapping[event][assignment]
                                 data['persons'][pid]['assignments'][depth]['assignmentCode'] = "staff-runner"
                         depth+=1
+
+def readExistingAssignments(wcif,stages):
+    ids_to_group = {}
+    for venue in wcif['schedule']['venues']:
+        for room in venue['rooms']:
+            for activity in room['activities']:
+                activity_split = activity['activityCode'].split('-')
+                # print(activity_split[1][1:])
+                if len(activity_split) >= 2 and activity_split[1][1:] == '1':
+                    event = activity_split[0]
+                    for child in activity['childActivities']:
+                        activity_id = child['id']
+                        group_activity_split = child['activityCode'].split('-')
+                        group = int(group_activity_split[-1][1:])
+                        ids_to_group[activity_id] = (event,group)
+                else:
+                    print('not used:',activity_split)
+    print(ids_to_group)
+    max_station = 0
+    person_activities = {}
+    person_to_id = {}
+    for person in wcif['persons']:
+        if person['registrantId']:
+            person_activities[person['name']] = {}
+            person_to_id[person['name']] = person['registrantId']
+            for activity in person['assignments']:
+                try:
+                    event, group = ids_to_group[activity['activityId']]
+                    stationnumber = activity['stationNumber']
+                    max_station = max(max_station,stationnumber)
+                except: # This is due to people being assigned to an event instead of a group. Should not require a scorecard
+                    if activity['activityId'] < 200:
+                        print('fail',person['name'],activity['activityId'])
+                    continue
+                if activity['assignmentCode'] == 'competitor':
+                    person_activities[person['name']][event] = (group,stationnumber)
+    
+    events = [event['rounds'][0]['id'].split('-')[0] for event in wcif['events']]
+    print(person_activities)
+    header = 'Name,Id'
+    for event in events:
+        header+=f',{event}'
+
+    hCSV = header.split(',')
+    header+='\n'
+    # print(hCSV)
+    for p_name,p_id in person_to_id.items():
+        # print(p_name,person_activities[p_name])
+        pString = p_name + ',' + str(p_id)
+        for event in hCSV[1:]:
+            # print(event)
+            # print(person_activities[p_name])
+            if event in person_activities[p_name]:
+                print(p_name,event,person_activities[p_name][event][0])
+                pString+=f"{person_activities[p_name][event][0]};{person_activities[p_name][event][1]}"
+            pString+=','
+        pString = pString[:-1]
+        header+=pString+'\n'
+    
+    tls = ''
+    for event in events:
+        tls+=f',{event}'
+    tls = tls[1:]
+    tCSV = tls.split(',')
+
+    tl = {}
+    for event in wcif['events']:
+        tl[event['rounds'][0]['id'].split('-')[0]] =  (event['rounds'][0]['timeLimit'],event['rounds'][0]['cutoff'])
+
+    tls+='\n'
+    for event in tCSV:
+        t, c = tl[event]
+        if t:
+            if (not t['cumulativeRoundIds']) and (not c):
+                tls += f"T;{t['centiseconds']},"
+            elif len(t['cumulativeRoundIds']) > 1:
+                eventstring = ''
+                for tlevent in t['cumulativeRoundIds']:
+                    eventstring += f";{tlevent.split('-')[0]}"
+                tls += f"S;{t['centiseconds']}{eventstring}," # HHHHH
+            elif t['cumulativeRoundIds']:
+                for tlevent in t['cumulativeRoundIds']:
+                    eventstring = f"{tlevent.split('-')[0]}"
+                tls += f"C;{t['centiseconds']},"
+            elif c:
+                tls += f"K;{c['attemptResult']};{t['centiseconds']},"
+        else: # multi bld
+            tls += f"M,"
+    tls = tls[:-1]
+
+    print(header,'\n',tls)
+    # FIX THIS TODO about station numbers
+    scorecards = genScorecards(header,tls,wcif['name'],stages,max_station//stages,False) 
+    return scorecards,max_station
+
+    

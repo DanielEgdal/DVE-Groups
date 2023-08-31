@@ -9,7 +9,7 @@
 <p class="managerStatus warningManager">This is a competition which you cannot manage, and will have limited features.</p>
 {% endif %}
 
-<form action="/comp/{{compid}}/download" method="POST"
+<form action="/comp/{{compid}}/download" method="POST">
     <br>
     {% if pre_stations %}
     <p>Station count <input type = "text" value = {{pre_stations}} name = "stations" /> </p>
@@ -27,5 +27,12 @@
         <p>Post to WCIF <input type = "checkbox" name = "postToWCIF" disabled/> </p>
     {% endif %}
     <button>Generate and download <input type="submit" name = "submit" /> </button>
+</form>
+
+<hr>
+<form action="/comp/{{compid}}/existing_groups" method="POST">
+    
+    <p>Number of stages <input type = "text" value = 1 name = "stages" /> </p>
+    <button>Use existing groups from WCIF (WIP) <input type="submit" name = "submit" /> </button>
 </form>
 {% endblock %}
