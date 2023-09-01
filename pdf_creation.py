@@ -197,7 +197,7 @@ def writeHeaderCards(personInfo,personlist,progress,ln,pdf):
     pdf.cell(8,2,table)
     pdf.cell(31.5,2,helping,ln=ln)
 
-def eventPatch(personInfo,personlist,scheduleInfo,progress,event,ln,pdf,mixed={}):
+def eventPatch(personInfo,personlist,progress,event,ln,pdf,mixed={}):
     translate = {'333':'3x3','222':'2x2','444':'4x4','555':'5x5','666':'6x6','777':'7x7',
     '333oh':'3x3 OH','333fm':'333fm','333mbf':'Multi','333bf':'3BLD','minx':'Megaminx','pyram':'Pyraminx',
     'skewb':'Skewb','clock':'Clock','555bf':'5BLD','444bf':'4BLD','sq1':'Square-1','333mbf1':'Multi A1','333mbf2':'Multi A2','333mbf3':'Multi A3'}
@@ -268,10 +268,11 @@ def compCards(scheduleInfo,personInfo,mixed={}):
     personlist.sort(key=lambda x:x.name)
     progress = 0
     event_list = []
-    for event in scheduleInfo.events:
+    for event in scheduleInfo.events: # Super ugly but needed due to other ugly code
         sevent = event[0].split('-')
         for event_ in sevent:
-            event_list.append(event_)
+            if event_ not in event_list:
+                event_list.append(event_)
     while progress < len(personlist):
         if pdf.get_y() > 220: # Potentially adjust this based on the amount of events
             pdf.add_page()
@@ -286,9 +287,9 @@ def compCards(scheduleInfo,personInfo,mixed={}):
             writeHeaderCards(personInfo,personlist,progress+1,False,pdf)
             writeHeaderCards(personInfo,personlist,progress+2,True,pdf)
             for event in event_list:
-                eventPatch(personInfo,personlist,scheduleInfo,progress,event,False,pdf,mixed)
-                eventPatch(personInfo,personlist,scheduleInfo,progress+1,event,False,pdf,mixed)
-                eventPatch(personInfo,personlist,scheduleInfo,progress+2,event,True,pdf,mixed)
+                eventPatch(personInfo,personlist,progress,event,False,pdf,mixed)
+                eventPatch(personInfo,personlist,progress+1,event,False,pdf,mixed)
+                eventPatch(personInfo,personlist,progress+2,event,True,pdf,mixed)
 
         elif progress+1 < len(personlist):
             writeNames(personlist,progress,False,pdf)
@@ -298,14 +299,14 @@ def compCards(scheduleInfo,personInfo,mixed={}):
             writeHeaderCards(personInfo,personlist,progress,False,pdf)
             writeHeaderCards(personInfo,personlist,progress+1,True,pdf)
             for event in event_list:
-                eventPatch(personInfo,personlist,scheduleInfo,progress,event,False,pdf,mixed)
-                eventPatch(personInfo,personlist,scheduleInfo,progress+1,event,True,pdf,mixed)
+                eventPatch(personInfo,personlist,progress,event,False,pdf,mixed)
+                eventPatch(personInfo,personlist,progress+1,event,True,pdf,mixed)
         else:
             writeNames(personlist,progress,True,pdf)
             writeCompeteLine(personInfo,personlist,progress,True,pdf)
             writeHeaderCards(personInfo,personlist,progress,True,pdf)
             for event in event_list:
-                eventPatch(personInfo,personlist,scheduleInfo,progress,event,True,pdf,mixed)
+                eventPatch(personInfo,personlist,progress,event,True,pdf,mixed)
         pdf.ln(5)
         progress +=3
 

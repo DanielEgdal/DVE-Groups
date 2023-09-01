@@ -19,8 +19,8 @@ class Competitor():
         self.assignments = defaultdict(list)
         self.dob = ''
         self.age = 0
-        self.stationNumbers = {}
-        self.totalAssignments = 1 # so addition works
+        self.stationNumbers = {} # Event -> stationnumber
+        self.totalAssignments = 1 # so division works
 
     def __str__(self):
         return self.name + " + info"

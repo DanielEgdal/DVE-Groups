@@ -58,15 +58,22 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     # return pdfOvierview
 
 def existing_groups(wcif,authorized,stages):
-    # TODO also add comp patches
+
     people,organizers,delegates = competitorBasicInfo(wcif,authorized)
     reglist = getRegList(people)
 
-    scorecards,stations = readExistingAssignments(wcif, stages)
+    people, schedule, max_station = readExistingAssignments(wcif,authorized)
 
     file_extension = 'pdf' if stages == 1 else 'zip'
     # if stations%stages != 0:
     #     text_log.write("The amount of stages is not a valid devisor for your stations. There might be a bug. \n")
-    
+    blanks = getBlanks(schedule.longName)
+    scorecardCSV = CSVForScorecards(schedule,people,None)
+    tls = CSVForTimeLimits(schedule,None)
+    compPatches = compCards(schedule,people)
+    # print(header,'\n',tls)
+    # FIX THIS TODO about station numbers
+    scorecards = genScorecards(scorecardCSV,tls,wcif['name'],stages,max_station//stages,False) 
+
     name = wcif['id']
-    return [(f"{name}Checkinlist.pdf",reglist),(f"{name}Scorecards.{file_extension}",scorecards)]
+    return [(f"{name}Checkinlist.pdf",reglist),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]

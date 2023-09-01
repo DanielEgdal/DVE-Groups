@@ -1,14 +1,13 @@
-import subprocess
 from copy import deepcopy
-from collections import defaultdict
-from time import sleep
+from competitors import Competitor, competitorBasicInfo
+from schedule import Schedule, scheduleBasicInfo
+import io
 import json
 from datetime import timedelta
-import webbrowser,requests
+import requests
 import pytz
 from pandas import Timestamp
-from scorecards import genScorecards
-import os
+from scorecards import genScorecards, CSVForScorecards,CSVForTimeLimits
 
 def get_me(header):
     return requests.get("https://www.worldcubeassociation.org/api/v0/me",headers=header)
@@ -25,15 +24,6 @@ def get_coming_comps(header,userid):
     comps = comps + [(comp['name'],comp['id'],False,comp['end_date']) for comp in ongoing if (comp['name'],comp['id'],True,comp['end_date']) not in comps]
     comps.sort(key=lambda x:x[3])
     return comps
-
-def genTokenNoob():
-    # webpage = "https://www.worldcubeassociation.org/oauth/authorize?client_id=8xB-6U1fFcZ9PAy80pALi9E7nzfoF44W4cMPyIUXrgY&redirect_uri=http%3A%2F%2Flocalhost%3A8001&response_type=token&scope=manage_competitions+public"
-    webpage = "https://www.worldcubeassociation.org/oauth/authorize?client_id=8xB-6U1fFcZ9PAy80pALi9E7nzfoF44W4cMPyIUXrgY&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=token&scope=manage_competitions+public" # copy manually
-    webbrowser.get("x-www-browser").open(webpage,new=0)
-
-    token = input("A browser should open. Copy the token from the URL and paste it here") # old when manually input
-
-    return token
 
 def getHeaderForWCIF():
     # genTokenLengthy()
@@ -204,7 +194,7 @@ def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
                                 data['persons'][pid]['assignments'][depth]['assignmentCode'] = "staff-runner"
                         depth+=1
 
-def readExistingAssignments(wcif,stages):
+def readExistingAssignments(wcif,authorized):
     ids_to_group = {}
     for venue in wcif['schedule']['venues']:
         for room in venue['rooms']:
@@ -218,84 +208,35 @@ def readExistingAssignments(wcif,stages):
                         group_activity_split = child['activityCode'].split('-')
                         group = int(group_activity_split[-1][1:])
                         ids_to_group[activity_id] = (event,group)
-                else:
-                    print('not used:',activity_split)
-    print(ids_to_group)
+
     max_station = 0
-    person_activities = {}
+    # person_activities = {}
     person_to_id = {}
+    people, _,_ = competitorBasicInfo(wcif,authorized=authorized)
+    schedule = scheduleBasicInfo(wcif,people,[],[],1,1,False,io.StringIO())
+
     for person in wcif['persons']:
         if person['registrantId']:
-            person_activities[person['name']] = {}
+            # person_activities[person['name']] = {}
             person_to_id[person['name']] = person['registrantId']
             for activity in person['assignments']:
                 try:
                     event, group = ids_to_group[activity['activityId']]
                     stationnumber = activity['stationNumber']
-                    max_station = max(max_station,stationnumber)
-                except: # This is due to people being assigned to an event instead of a group. Should not require a scorecard
+                except: # This is due to people being assigned to an event instead of a group, i.e. assignments done with a bad program and not compatible here.
                     if activity['activityId'] < 200:
                         print('fail',person['name'],activity['activityId'])
                     continue
                 if activity['assignmentCode'] == 'competitor':
-                    person_activities[person['name']][event] = (group,stationnumber)
+                    # person_activities[person['name']][event] = (group,stationnumber)
+                    people[person['name']].groups[event] = group
+                    people[person['name']].stationNumbers[event] = stationnumber
+                    max_station = max(max_station,stationnumber)
+                elif activity['assignmentCode'] == "staff-scrambler":
+                    people[person['name']].assignments[event].append(f";S{group}")
+                elif activity['assignmentCode'] == "staff-judge":
+                    people[person['name']].assignments[event].append(f"{group}")
+                elif activity['assignmentCode'] == "staff-runner":
+                    people[person['name']].assignments[event].append(f";R{group}")
     
-    events = [event['rounds'][0]['id'].split('-')[0] for event in wcif['events']]
-    print(person_activities)
-    header = 'Name,Id'
-    for event in events:
-        header+=f',{event}'
-
-    hCSV = header.split(',')
-    header+='\n'
-    # print(hCSV)
-    for p_name,p_id in person_to_id.items():
-        # print(p_name,person_activities[p_name])
-        pString = p_name + ',' + str(p_id)
-        for event in hCSV[1:]:
-            # print(event)
-            # print(person_activities[p_name])
-            if event in person_activities[p_name]:
-                print(p_name,event,person_activities[p_name][event][0])
-                pString+=f"{person_activities[p_name][event][0]};{person_activities[p_name][event][1]}"
-            pString+=','
-        pString = pString[:-1]
-        header+=pString+'\n'
-    
-    tls = ''
-    for event in events:
-        tls+=f',{event}'
-    tls = tls[1:]
-    tCSV = tls.split(',')
-
-    tl = {}
-    for event in wcif['events']:
-        tl[event['rounds'][0]['id'].split('-')[0]] =  (event['rounds'][0]['timeLimit'],event['rounds'][0]['cutoff'])
-
-    tls+='\n'
-    for event in tCSV:
-        t, c = tl[event]
-        if t:
-            if (not t['cumulativeRoundIds']) and (not c):
-                tls += f"T;{t['centiseconds']},"
-            elif len(t['cumulativeRoundIds']) > 1:
-                eventstring = ''
-                for tlevent in t['cumulativeRoundIds']:
-                    eventstring += f";{tlevent.split('-')[0]}"
-                tls += f"S;{t['centiseconds']}{eventstring}," # HHHHH
-            elif t['cumulativeRoundIds']:
-                for tlevent in t['cumulativeRoundIds']:
-                    eventstring = f"{tlevent.split('-')[0]}"
-                tls += f"C;{t['centiseconds']},"
-            elif c:
-                tls += f"K;{c['attemptResult']};{t['centiseconds']},"
-        else: # multi bld
-            tls += f"M,"
-    tls = tls[:-1]
-
-    print(header,'\n',tls)
-    # FIX THIS TODO about station numbers
-    scorecards = genScorecards(header,tls,wcif['name'],stages,max_station//stages,False) 
-    return scorecards,max_station
-
-    
+    return people, schedule, max_station
