@@ -1,10 +1,12 @@
 from math import ceil
 from copy import deepcopy
 from collections import Counter
+from competitors import Competitor
 from judges import * 
+from typing import Dict
 import random
 
-def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,text_log,fixed):
+def splitIntoOverlapGroups(scheduleInfo,personInfo:Dict[str,Competitor],combination,text_log,fixed):
     """
     Assigns groups for all overlapping events at the same time, and does assignments.
     As I could not find a proper deterministic manner of getting judges and competitors,
@@ -57,7 +59,11 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo,combination,text_log,fixed):
         else:
             groupNumList = [j for j in range(len(scheduleInfo.groups[event]))]
             for idDelegate, delegate in enumerate(twoDelegates):
-                assigned = False
+                if event not in personInfo[delegate].events:
+                    assigned = True
+                    pass
+                else:
+                    assigned = False
                 for idy in groupNumList:
                     if not assigned:
                         if stillSide:

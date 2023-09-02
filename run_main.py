@@ -25,7 +25,7 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
 
     print(text_log.getvalue())
 
-    reassignJudges(schedule,people,text_log,fixed,mixed=mixed) # This part probably needs to be fixed as well for the combined events
+    reassignJudges(schedule,people,text_log,fixed,mixed=mixed,stages=stages) # This part probably needs to be fixed as well for the combined events
 
     name = schedule.name
     # manuCsv = convertCSV(schedule,people,f'{target}/{name}Groups.csv',combined=combined)
@@ -51,7 +51,7 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     blanks = getBlanks(schedule.longName)
 
     text_log.seek(0)
-
+    print(schedule.groupTimes['333mbf1'])
 
     # It is important that scorecards is the last object in the list.
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
@@ -74,6 +74,7 @@ def existing_groups(wcif,authorized,stages):
     # print(header,'\n',tls)
     # FIX THIS TODO about station numbers
     scorecards = genScorecards(scorecardCSV,tls,wcif['name'],stages,max_station//stages,False) 
+    pdfOvierview = makePDFOverview(schedule)
 
     name = wcif['id']
-    return [(f"{name}Checkinlist.pdf",reglist),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]
+    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}Checkinlist.pdf",reglist),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]

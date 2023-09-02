@@ -1,6 +1,6 @@
 from copy import deepcopy
 from competitors import Competitor, competitorBasicInfo
-from schedule import Schedule, scheduleBasicInfo
+from schedule import Schedule, scheduleBasicInfo,createDictRound,createDictGroup
 import io
 import json
 from datetime import timedelta
@@ -24,13 +24,6 @@ def get_coming_comps(header,userid):
     comps = comps + [(comp['name'],comp['id'],False,comp['end_date']) for comp in ongoing if (comp['name'],comp['id'],True,comp['end_date']) not in comps]
     comps.sort(key=lambda x:x[3])
     return comps
-
-def getHeaderForWCIF():
-    # genTokenLengthy()
-    token = genTokenNoob()
-    with open('authcode','w') as f:
-        f.write(token.strip())
-    return {'Authorization':f"Bearer {token}"}
 
 def getWcif(id,header):
 
@@ -97,6 +90,8 @@ def createChildActivityWCIF(data,scheduleInfo):
     for vid, venue in enumerate(data['schedule']['venues']):
         for rid,room in enumerate(venue['rooms']):
             for aid,activity in enumerate(room['activities']):
+                # if activity['id'] == 54:
+                #     continue
                 eventSplit = activity['activityCode'].split('-')
                 if ((eventSplit[1][-1] == '1' and len(eventSplit) == 2) and eventSplit[0] in scheduleInfo.groupTimes) or len(eventSplit) > 2 or (eventSplit[0] in scheduleInfo.combinedEvents and eventSplit[1][-1] == '1'):
                     if eventSplit[0] == '333mbf':
@@ -195,7 +190,11 @@ def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
                         depth+=1
 
 def readExistingAssignments(wcif,authorized):
+    people, _,_ = competitorBasicInfo(wcif,authorized=authorized)
+    schedule = scheduleBasicInfo(wcif,people,[],[],1,1,False,io.StringIO())
+
     ids_to_group = {}
+    group_to_id = {}
     for venue in wcif['schedule']['venues']:
         for room in venue['rooms']:
             for activity in room['activities']:
@@ -203,25 +202,34 @@ def readExistingAssignments(wcif,authorized):
                 # print(activity_split[1][1:])
                 if len(activity_split) >= 2 and activity_split[1][1:] == '1':
                     event = activity_split[0]
+                    if event == '333mbf':
+                        event = '333mbf1'
                     for child in activity['childActivities']:
                         activity_id = child['id']
                         group_activity_split = child['activityCode'].split('-')
                         group = int(group_activity_split[-1][1:])
                         ids_to_group[activity_id] = (event,group)
-
+                        group_to_id[(event,group)] = activity_id
+                        if event not in schedule.groups:
+                            createDictRound(schedule,event)
+                        if group not in schedule.groups:
+                            createDictGroup(schedule,event,group)
+    schedule.getIndividualGroupTimes()
     max_station = 0
     # person_activities = {}
-    person_to_id = {}
-    people, _,_ = competitorBasicInfo(wcif,authorized=authorized)
-    schedule = scheduleBasicInfo(wcif,people,[],[],1,1,False,io.StringIO())
+    # person_to_id = {}
+    station_fixes = []
+    requires_patch = False
 
     for person in wcif['persons']:
         if person['registrantId']:
             # person_activities[person['name']] = {}
-            person_to_id[person['name']] = person['registrantId']
+            # person_to_id[person['name']] = person['registrantId']
             for activity in person['assignments']:
                 try:
                     event, group = ids_to_group[activity['activityId']]
+                    if event == '333mbf':
+                        event = '333mbf1'
                     stationnumber = activity['stationNumber']
                 except: # This is due to people being assigned to an event instead of a group, i.e. assignments done with a bad program and not compatible here.
                     if activity['activityId'] < 200:
@@ -231,12 +239,29 @@ def readExistingAssignments(wcif,authorized):
                     # person_activities[person['name']][event] = (group,stationnumber)
                     people[person['name']].groups[event] = group
                     people[person['name']].stationNumbers[event] = stationnumber
+                    schedule.groups[event][group].append(person['name'])
+                    if not stationnumber:
+                        stationnumber = 0
+                        station_fixes.append((person['name'],event,group))
+                        requires_patch = True
+                    schedule.stationOveriew[event][group][person['name']] = stationnumber
                     max_station = max(max_station,stationnumber)
                 elif activity['assignmentCode'] == "staff-scrambler":
                     people[person['name']].assignments[event].append(f";S{group}")
+                    schedule.groupScramblers[event][group].append(person['name'])
                 elif activity['assignmentCode'] == "staff-judge":
                     people[person['name']].assignments[event].append(f"{group}")
+                    schedule.groupJudges[event][group].append(person['name'])
                 elif activity['assignmentCode'] == "staff-runner":
                     people[person['name']].assignments[event].append(f";R{group}")
-    
+                    schedule.groupRunners[event][group].append(person['name'])
+    if requires_patch:
+        # TODO update the wcif
+        for person, event, group in station_fixes:
+            new_station = max([val for val in schedule.stationOveriew[event][group].values()])+1
+            schedule.stationOveriew[event][group][person] = new_station
+            people[person].stationNumbers[event] = new_station
+            # print(person, event, group,new_station)
+        # enterPersonActivitiesWCIF()
+
     return people, schedule, max_station

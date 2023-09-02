@@ -154,6 +154,20 @@ def combineCompetitors(scheduleInfo:Schedule, setOfEvents):
         competitorsInSet = list(set(scheduleInfo.eventCompetitors[event]) | set(competitorsInSet))
     return competitorsInSet
 
+def createDictRound(scheduleInfo:Schedule,event):
+    scheduleInfo.groupJudges[event] = {}
+    scheduleInfo.groups[event] = {}
+    scheduleInfo.stationOveriew[event] = {}
+    scheduleInfo.groupScramblers[event] = {}
+    scheduleInfo.groupRunners[event] = {}
+    
+def createDictGroup(scheduleInfo:Schedule,event,group):
+    scheduleInfo.groupJudges[event][group] = []
+    scheduleInfo.groups[event][group] = []
+    scheduleInfo.stationOveriew[event][group] = {}
+    scheduleInfo.groupScramblers[event][group] = []
+    scheduleInfo.groupRunners[event][group] = []
+
 def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False],just1=[False]):
     """
     The script isn't made for specifying a different amount of stations per event.
@@ -162,46 +176,34 @@ def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False]
     """
     if type(custom) == dict: # dictionary
         for event in custom:
-            scheduleInfo.groups[event] = {}
-            scheduleInfo.stationOveriew[event] = {}
+            createDictRound(scheduleInfo,event)
             for amount in range(1,custom[event]+1):
-                scheduleInfo.groups[event][amount] = []
-                scheduleInfo.stationOveriew[event][amount] = {}
+                createDictGroup(scheduleInfo,event,amount)
     if just1[0]:
         for event in just1:
             if (event in scheduleInfo.eventWOTimes) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
-                scheduleInfo.groups[event] = {}
-                scheduleInfo.groups[event][1] = []
-                scheduleInfo.stationOveriew[event] = {}
-                scheduleInfo.stationOveriew[event][1] = {}
+                createDictRound(scheduleInfo,event)
+                createDictGroup(scheduleInfo,event,1)
     if fixedSeating:
         for event in scheduleInfo.eventCompetitors:
             if (event not in just1) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
-                scheduleInfo.groups[event] = {}
-                scheduleInfo.stationOveriew[event] = {}
+                createDictRound(scheduleInfo,event)
                 for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
-                    scheduleInfo.groups[event][amount] = []
-                    scheduleInfo.stationOveriew[event][amount] = {}
+                    createDictGroup(scheduleInfo,event,amount)
     else:
         # stationCount *=1.15
         for event in scheduleInfo.eventCompetitors:
             if (event not in just1) and (event not in custom) and (event not in scheduleInfo.setOfCombinedEvents):
-                scheduleInfo.groups[event] = {}
-                scheduleInfo.stationOveriew[event] = {}
+                createDictRound(scheduleInfo,event)
                 for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
-                    scheduleInfo.groups[event][amount] = []
-                    scheduleInfo.stationOveriew[event][amount] = {}
+                    createDictGroup(scheduleInfo,event,amount)
     if scheduleInfo.allCombinedEvents[0]:
         for setOfEvents in scheduleInfo.allCombinedEvents:
             competitorsInSet = combineCompetitors(scheduleInfo,setOfEvents)
             for event in setOfEvents:
-                scheduleInfo.groupJudges[event] = {}
-                scheduleInfo.groups[event] = {}
-                scheduleInfo.stationOveriew[event] = {}
+                createDictRound(scheduleInfo,event)
                 for amount in range(1,max([ceil(len(competitorsInSet)/stationCount) +1,3])):
-                        scheduleInfo.groups[event][amount] = []
-                        scheduleInfo.stationOveriew[event][amount] = {}
-                        scheduleInfo.groupJudges[event][amount] = []
+                        createDictGroup(scheduleInfo,event,amount)
 
 def advancementCalculation(Type,level,competitorCount,event,text_log):
     if Type == "percent":
