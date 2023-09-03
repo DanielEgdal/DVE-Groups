@@ -1,6 +1,7 @@
 from copy import deepcopy
 from competitors import Competitor, competitorBasicInfo
 from schedule import Schedule, scheduleBasicInfo,createDictRound,createDictGroup
+from collections import defaultdict
 import io
 import json
 from datetime import timedelta
@@ -90,7 +91,7 @@ def createChildActivityWCIF(data,scheduleInfo):
     for vid, venue in enumerate(data['schedule']['venues']):
         for rid,room in enumerate(venue['rooms']):
             for aid,activity in enumerate(room['activities']):
-                # if activity['id'] == 54:
+                # if activity['id'] == 54: # TODO multiple schedule times of one event gives crash.
                 #     continue
                 eventSplit = activity['activityCode'].split('-')
                 if ((eventSplit[1][-1] == '1' and len(eventSplit) == 2) and eventSplit[0] in scheduleInfo.groupTimes) or len(eventSplit) > 2 or (eventSplit[0] in scheduleInfo.combinedEvents and eventSplit[1][-1] == '1'):
@@ -256,12 +257,21 @@ def readExistingAssignments(wcif,authorized):
                     people[person['name']].assignments[event].append(f";R{group}")
                     schedule.groupRunners[event][group].append(person['name'])
     if requires_patch:
-        # TODO update the wcif
+        # TODO take an argument whether or not to patch
+        to_patch = defaultdict(dict)
         for person, event, group in station_fixes:
             new_station = max([val for val in schedule.stationOveriew[event][group].values()])+1
             schedule.stationOveriew[event][group][person] = new_station
             people[person].stationNumbers[event] = new_station
+            to_patch[person][group_to_id[(event,group)]] = new_station
             # print(person, event, group,new_station)
         # enterPersonActivitiesWCIF()
+        for pid,person in enumerate(wcif['persons']):
+            if person['name'] not in to_patch:
+                continue
+            for aid, assignment in enumerate(wcif['persons'][pid]['assignments']):
+                if assignment['activityId'] in to_patch[person['name']]:
+                    wcif['persons'][pid]['assignments'][aid]['stationNumber'] = to_patch[person['name']][assignment['activityId']]
+                    # print(person['name'],assignment['activityId'],to_patch[person['name']][assignment['activityId']])
 
     return people, schedule, max_station

@@ -46,16 +46,10 @@ def placePeopleInVenueInPQ(scheduleInfo,personInfo,event,groupNum,pq,used,text_l
             if comp in scheduleInfo.delegates:
                 pq.insert([comp,0])
             else:
-                pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                pq.insert([comp,logPQAssignmentVal(personInfo,comp)])
 
-def assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used):
-    while not pq.is_empty() and len(scheduleInfo.groupJudges[event][groupNum]) < needed:
-        judge = pq.del_max()[0]
-        personInfo[judge].totalAssignments +=1
-        personInfo[judge].assignments[event].append(groupNum)
-        scheduleInfo.groupJudges[event][groupNum].append(judge)
-        atleast1.add(judge) 
-        used.add(judge)
+def logPQAssignmentVal(personInfo,competitor):
+    return (math.log(len(personInfo[competitor].events)))/(personInfo[competitor].totalAssignments)
 
 def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=True): 
     random.shuffle(combination)
@@ -89,7 +83,7 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                                         else:
                                             checkLegal = False
                             if checkLegal:
-                                pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                                pq.insert([comp,logPQAssignmentVal(personInfo,comp)])
                 assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
                 if len(scheduleInfo.groupJudges[event][groupNum]) < needed: # If we didn't get enough first time, check people in venue
                     for comp in maybePeople:
@@ -112,7 +106,7 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                                 if comp in scheduleInfo.delegates:
                                     pq.insert([comp,0])
                                 else:
-                                    pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                                    pq.insert([comp,logPQAssignmentVal(personInfo,comp)])
                     assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
                     if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
                         missing += needed-len(scheduleInfo.groupJudges[event][groupNum])
@@ -120,6 +114,7 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
         return missing
     else:
         missing = 0
+        atleast1 = set()
         for event in combination:
             scheduleInfo.groupJudges[event] = {}
             groups = scheduleInfo.groups[event]
@@ -129,7 +124,7 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                 pq = MaxPQ()
                 scheduleInfo.groupJudges[event][groupNum] = []
                 if event not in ['333mbf','333mbf1','333mbf2','333mbf3','555bf','444bf']:
-                    needed = len(scheduleInfo.groups[event][groupNum])-1
+                    needed = len(scheduleInfo.groups[event][groupNum])-3 # TODO make this some percentage
                 elif event in ['555bf','444bf']:
                     needed = int(len(scheduleInfo.groups[event][groupNum])/2) + 2
                 else:
@@ -137,9 +132,9 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                 used = set() # those that were already tried
                 for comp in competitors:
                     if comp not in scheduleInfo.delegates:
-                        if comp not in scheduleInfo.groups[event][groupNum]: # Check they aren't competing in overlapping group
+                        if comp not in scheduleInfo.groups[event][groupNum]: # That they aren't competing in the group
                             checkLegal = True
-                            for event2 in personInfo[comp].groups:
+                            for event2 in personInfo[comp].groups: # Check they aren't competing in overlapping group
                                 if event2 in combination:
                                     if not scheduleInfo.groupTimeChecker(scheduleInfo.groupTimes[event][groupNum],scheduleInfo.groupTimes[event2][personInfo[comp].groups[event2]]):
                                         pass
@@ -153,16 +148,19 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                                         else:
                                             checkLegal = False
                             if checkLegal:
+                                assignmentValue = logPQAssignmentVal(personInfo,comp)
+                                if comp not in atleast1:
+                                    assignmentValue = (assignmentValue+1)*4
                                 if len(event) > 4:
                                     if event in ['333mbf','333mbf1','333mbf2','333mbf3','555bf','444bf']:
-                                        if personInfo[comp].wcaId:
-                                            pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                                        if personInfo[comp].wcaId and personInfo[comp].age > 13:
+                                            pq.insert([comp,assignmentValue])
                                     else:
-                                        pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                                        pq.insert([comp,assignmentValue])
                                 else:
-                                    pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
-                assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
-                if len(scheduleInfo.groupJudges[event][groupNum]) < needed: # If we didn't get enough first time, check people in veneu
+                                    pq.insert([comp,assignmentValue])
+                assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used)
+                if len(scheduleInfo.groupJudges[event][groupNum]) < needed: # If we didn't get enough first time, check people in venue
                     for comp in maybePeople:
                         if comp not in used and not comp in scheduleInfo.groups[event][groupNum]:
                             checkLegal = True
@@ -183,11 +181,11 @@ def judgePQOverlap(combination,scheduleInfo,personInfo,text_log,fixedSeating=Tru
                                 if comp in scheduleInfo.delegates:
                                     pq.insert([comp,0])
                                 if event in ['333mbf','333mbf1','333mbf2','333mbf3','555bf','444bf']:
-                                    if personInfo[comp].wcaId:
-                                        pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
+                                    if personInfo[comp].wcaId and personInfo[comp].age > 13:
+                                        pq.insert([comp,logPQAssignmentVal(personInfo,comp)])
                                 else:
-                                    pq.insert([comp,(math.log(len(personInfo[comp].events)))/(personInfo[comp].totalAssignments)])
-                    assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,set(),used)
+                                    pq.insert([comp,logPQAssignmentVal(personInfo,comp)])
+                    assignJudgesFromPQ(scheduleInfo,personInfo,event,groupNum,pq,needed,atleast1,used)
                     if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
                         missing += needed-len(scheduleInfo.groupJudges[event][groupNum])
                         # text_log.write(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed} \n")

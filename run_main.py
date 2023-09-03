@@ -57,7 +57,8 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview
 
-def existing_groups(wcif,authorized,stages):
+def existing_groups(wcif,authorized,stages,token):
+    text_log = io.StringIO()
 
     people,organizers,delegates = competitorBasicInfo(wcif,authorized)
     reglist = getRegList(people)
@@ -74,7 +75,12 @@ def existing_groups(wcif,authorized,stages):
     # print(header,'\n',tls)
     # FIX THIS TODO about station numbers
     scorecards = genScorecards(scorecardCSV,tls,wcif['name'],stages,max_station//stages,False) 
-    pdfOvierview = makePDFOverview(schedule)
-
     name = wcif['id']
-    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}Checkinlist.pdf",reglist),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]
+    pdfOvierview = makePDFOverview(schedule)
+    if authorized:
+        postWcif(name,wcif,token,text_log)
+
+    text_log.seek(0)
+
+    
+    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}Checkinlist.pdf",reglist),(f"logFile.txt",text_log.getvalue().encode('utf-8')),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]

@@ -173,7 +173,7 @@ def existing_groups_flask(compid):
             form_data = request.form
             session['stages'] = int(escape(form_data["stages"]))
             
-            pdfs_to_user = existing_groups(wcif,session['canAdminComp'],session['stages'])
+            pdfs_to_user = existing_groups(wcif,session['canAdminComp'],session['stages'],session['token'])
 
             if session['stages'] > 1: # This is because scorecards might be stored as zip. Rest of files is done below.
                 scorecardObj = pdfs_to_user.pop()
