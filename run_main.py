@@ -51,7 +51,6 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     blanks = getBlanks(schedule.longName)
 
     text_log.seek(0)
-    print(schedule.groupTimes['333mbf1'])
 
     # It is important that scorecards is the last object in the list.
     return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
@@ -63,7 +62,7 @@ def existing_groups(wcif,authorized,stages,token):
     people,organizers,delegates = competitorBasicInfo(wcif,authorized)
     reglist = getRegList(people)
 
-    people, schedule, max_station = readExistingAssignments(wcif,authorized)
+    people, schedule, max_station, requires_patch = readExistingAssignments(wcif,authorized)
 
     file_extension = 'pdf' if stages == 1 else 'zip'
     # if stations%stages != 0:
@@ -77,8 +76,9 @@ def existing_groups(wcif,authorized,stages,token):
     scorecards = genScorecards(scorecardCSV,tls,wcif['name'],stages,max_station//stages,False) 
     name = wcif['id']
     pdfOvierview = makePDFOverview(schedule)
-    if authorized:
+    if authorized and requires_patch:
         postWcif(name,wcif,token,text_log)
+        print('just pushed')
 
     text_log.seek(0)
 

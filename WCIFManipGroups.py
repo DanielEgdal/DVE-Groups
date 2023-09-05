@@ -192,7 +192,7 @@ def enterPersonActivitiesWCIF(data,personInfo,scheduleInfo):
 
 def readExistingAssignments(wcif,authorized):
     people, _,_ = competitorBasicInfo(wcif,authorized=authorized)
-    schedule = scheduleBasicInfo(wcif,people,[],[],1,1,False,io.StringIO())
+    schedule = scheduleBasicInfo(wcif,people,[],[],len(people),1,False,io.StringIO())
 
     ids_to_group = {}
     group_to_id = {}
@@ -213,7 +213,7 @@ def readExistingAssignments(wcif,authorized):
                         group_to_id[(event,group)] = activity_id
                         if event not in schedule.groups:
                             createDictRound(schedule,event)
-                        if group not in schedule.groups:
+                        if group not in schedule.groups[event]:
                             createDictGroup(schedule,event,group)
     schedule.getIndividualGroupTimes()
     max_station = 0
@@ -271,7 +271,8 @@ def readExistingAssignments(wcif,authorized):
                 continue
             for aid, assignment in enumerate(wcif['persons'][pid]['assignments']):
                 if assignment['activityId'] in to_patch[person['name']]:
+                    print('did wcif update')
                     wcif['persons'][pid]['assignments'][aid]['stationNumber'] = to_patch[person['name']][assignment['activityId']]
                     # print(person['name'],assignment['activityId'],to_patch[person['name']][assignment['activityId']])
-
-    return people, schedule, max_station
+    
+    return people, schedule, max_station, requires_patch

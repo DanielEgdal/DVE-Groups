@@ -139,7 +139,6 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo:Dict[str,Competitor],combinat
                                         personInfo[delegate].groups[event] = idy+1
                                         assigned =True
                 if not assigned:
-                    text_log.write(f'failed {delegate} {event} \n')
                     for idy in groupNumList:
                         checkLegal = True
                         for event2 in personInfo[delegate].groups:
@@ -154,7 +153,8 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo:Dict[str,Competitor],combinat
                             assigned =True
                             text_log.write(f'fixed {delegate} {event} {idy+1} \n')
                             break
-                    
+                if not assigned:
+                   text_log.write(f'failed {delegate} {event} \n')
 
 
     compByCount = [[] for _ in range(len(combination2))]
@@ -198,9 +198,11 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo:Dict[str,Competitor],combinat
                                             for event2 in pes2[p2[0]].groups:
                                                 if event2 in combination:
                                                     if not sh2.groupTimeChecker(sh2.groupTimes[event][idy+1],sh2.groupTimes[event2][pes2[p2[0]].groups[event2]]):
+                                                        # print('approved','overlapcheck',event,  idy+1, event2, pes2[p2[0]].groups[event2], pes2[p2[0]])
                                                         pass # Check that they don't have an overlapping event
                                                     else:
                                                         checkLegal = False
+                                                        # print('failed','overlapcheck',event,  idy+1, event2, pes2[p2[0]].groups[event2], pes2[p2[0]])
                                             if checkLegal:
                                                 sh2.groups[event][idy+1].append(p2[0])
                                                 pes2[p2[0]].groups[event] = idy+1
