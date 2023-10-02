@@ -14,6 +14,7 @@ def splitIntoOverlapGroups(scheduleInfo,personInfo:Dict[str,Competitor],combinat
     It will print out if there were some mistake.
     Failing to assign a person adds 100 to the fail score, a missing judge is 1.
     """
+    # TODO remove a lot of the code duplication. Also, Delegates are sometimes placed in an impossible group.
     all = []
     oneGroup = []
     combination2 = deepcopy(combination)

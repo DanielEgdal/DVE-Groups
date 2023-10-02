@@ -214,6 +214,14 @@ def assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo,text_log):
             if len(scheduleInfo.groupJudges[event][groupNum]) < needed:
                 text_log.write(f"Not possible for {event} group {groupNum}. Got {len(scheduleInfo.groupJudges[event][groupNum])} of {needed} \n")
 
+def getJudgingGroup4PlusNonOverlap(solvingGroup,groupCount):
+    step = max(2, groupCount // 2)  # Ensure at least 2 slots separation or half of slots
+    helping_group = (solvingGroup + step - 1) % groupCount + 1
+    return helping_group
+
+def getJudgingSmallGroupNonOverlap(solvingGroup,groupCount):
+    return (solvingGroup % groupCount) + 1
+
 def judgePQNonOverlap(event,scheduleInfo,personInfo,text_log,fixedSeating=True):
     if fixedSeating:
         assignJudgesPQNonOverlapStyle(event,scheduleInfo,personInfo,text_log)
@@ -224,7 +232,10 @@ def judgePQNonOverlap(event,scheduleInfo,personInfo,text_log,fixedSeating=True):
             for group in groups:
                 scheduleInfo.groupJudges[event][group] = []
             for competitor in scheduleInfo.eventCompetitors[event]:
-                group_to_place = ((personInfo[competitor].groups[event]-2)%len(groups)) +1
+                if len(groups) <= 3:
+                    group_to_place = getJudgingSmallGroupNonOverlap(personInfo[competitor].groups[event],len(groups))
+                else:
+                    group_to_place = getJudgingGroup4PlusNonOverlap(personInfo[competitor].groups[event],len(groups))
 
                 scheduleInfo.groupJudges[event][group_to_place].append(competitor)
                 personInfo[competitor].totalAssignments +=1

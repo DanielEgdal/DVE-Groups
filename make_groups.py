@@ -6,23 +6,15 @@ from competitors import Competitor
 from collections import defaultdict
 from overlap_groups import * 
 
-
 def specialPeopleCompeteAssign(specialCompList,p2,personInfo,event,groups):
-    specialCompList.sort(key=lambda x:personInfo[x].prs[event], reverse=True)
-    part1 = specialCompList[:ceil(len(specialCompList)/2)]
-    part2 = specialCompList[ceil(len(specialCompList)/2):]
-    while len(part1) > 0: # Place slowest half in second fastest group
-        comp = part1[0]
-        part1 = part1[1:]
-        groups[len(groups)-1].append(comp)
-        personInfo[comp].groups[event] = len(groups)-1
-        p2.remove(comp)
-    while len(part2) > 0: # Place fastest half in fastest group
-        comp = part2[0]
-        part2 = part2[1:]
-        groups[len(groups)].append(comp)
-        personInfo[comp].groups[event] = len(groups)
-        p2.remove(comp)
+    specialCompList.sort(key=lambda x:personInfo[x].prs[event],reverse=True)
+    while specialCompList:
+        for i in range(len(groups),0,-1):
+            if specialCompList:
+                comp = specialCompList.pop()
+                groups[i].append(comp)
+                personInfo[comp].groups[event] = i
+                p2.remove(comp)
 
 def popCompetitorAssign(p2,groups,personInfo,event,groupNum,forward):
     if forward:
