@@ -73,6 +73,18 @@ def logged_in():
 def playground():
     return render_template('playground.html',user_name=session['name'])
 
+def autoFillRounds(wcif):
+    events = set([event['id'] for event in wcif['events']])
+    autoFill = ''
+    if '666' in events and '777' in events:
+        autoFill += '666,777-'
+    
+    if '444bf' in events and '555bf' in events:
+        autoFill += '444bf,555bf-'
+    if autoFill:
+        autoFill = autoFill[:-1] # remove the superflous '-'
+    return autoFill
+
 @app.route("/comp/<compid>")
 def comp_page(compid):
     fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
@@ -83,6 +95,7 @@ def comp_page(compid):
             if 'token' in session:
                 wcif,statusCode =  getWcif(compid,session['token'])
                 session['canAdminComp'] = True if statusCode == 200 else False
+                
                 if wcif['extensions']:
                     if 'stations' in wcif['extensions'][0]['data']:
                         session['pre_stations'] = wcif['extensions'][0]['data']['stations']
@@ -91,10 +104,13 @@ def comp_page(compid):
                 else:
                     session['pre_stations'] = 10
             else:
+                wcif, statusCode = getWCIFPublic(compid)
                 session['canAdminComp'] = False
                 session['pre_stations'] = None
                 statusCode = 401
-            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode,admin=(session['canAdminComp']),pre_stations = session['pre_stations'])
+            comp_name = wcif['name']
+            eventAutoFill = autoFillRounds(wcif)
+            return render_template("group_spec.html",compid=compid,user_name=session['name'],status=statusCode,admin=(session['canAdminComp']),pre_stations = session['pre_stations'],comp_name=comp_name,eventAutoFill=eventAutoFill)
         else:
             return fail_string
     return fail_string

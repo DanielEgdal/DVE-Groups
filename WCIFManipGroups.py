@@ -260,7 +260,11 @@ def readExistingAssignments(wcif,authorized):
         # TODO take an argument whether or not to patch
         to_patch = defaultdict(dict)
         for person, event, group in station_fixes:
-            new_station = max([val for val in schedule.stationOveriew[event][group].values()])+1
+            stations_for_group = [val for val in schedule.stationOveriew[event][group].values()]
+            if min(stations_for_group)>1:
+                new_station = min(stations_for_group)-1
+            else:
+                new_station = max(stations_for_group)+1
             schedule.stationOveriew[event][group][person] = new_station
             people[person].stationNumbers[event] = new_station
             to_patch[person][group_to_id[(event,group)]] = new_station
