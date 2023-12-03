@@ -59,18 +59,15 @@ def splitNonOverlapGroups(scheduleInfo,personInfo,event,fixed=True):
             while len(groups[groupNum]) < perGroup and len(p2) > 0: # Assigning slowest first
                 p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,False)
     else:
-        # for groupNum in range(1,len(groups)+1):
-        if event in ['333','222','skewb','pyram']:
-            for groupNum in range(len(groups),0,-1):
-                for _ in range(1,scramblerCount+1): # taking best people, to ensure there are scramblers later (not all fast in same group)
+        for groupNum in range(len(groups),0,-1): # taking best people, to ensure there are scramblers later (not all fast in same group)
+            for _ in range(1,scramblerCount+1):
+                if event in ['333','222','skewb','pyram']: 
                     p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,True)
-        else:
-            for _ in range(1,scramblerCount+1): # taking best people, to ensure there are scramblers later (not all fast in same group)
-                for groupNum in range(len(groups),0,-1):
+                else: # Right now this if/else does the exact same. Can be modified in case fast people shouldn't be taken aside here
                     p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,True)
         for groupNum in range(len(groups),0,-1):
-            while len(groups[groupNum]) < perGroup and len(p2) > 0: # Assigning slowest first
-                p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,False)
+            while len(groups[groupNum]) < perGroup and len(p2) > 0: # Assigning fastest first
+                p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,True)
     while len(p2) > 0: # If some people were somehow left out, add them in the last group
         p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,False)
         groupNum = (groupNum+1) % len(groups[groupNum])
