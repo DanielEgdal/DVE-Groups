@@ -1,5 +1,7 @@
 from fpdf import FPDF # For pdfs. pip3 install fpdf2
 from copy import deepcopy
+from io import BytesIO
+import qrcode
 
 dejavu= "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf"
 dejavub = '/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf'
@@ -168,10 +170,18 @@ def makePDFOverview(scheduleInfo):
     return pdf.output(dest='b')
 
 def shortenName(name):
-    while len(name) > 26:
+    max_len = 26
+    name = name.split(' (')[0] # Remove non latin
+    prev_name = ''
+    while len(name) > max_len and prev_name != name: # While name is too long, and it did change the last iteration
+        prev_name = name
         lname = name.split(' ')
-        lname = lname[:-2] + [lname[-1]]
+        lname = lname[:1]+ lname[1:-2] + [lname[-1]] # Keep first name, and the surname. Removing the second last name.
         name = ' '.join(lname)
+    
+    if len(name) > max_len: # If still too long, truncate the name
+        name = name[:max_len]
+
     return name
 
 def writeNames(personlist,progress,ln,pdf):
@@ -185,6 +195,12 @@ def writeCompeteLine(personInfo,personlist,progress,ln,pdf):
     pdf.cell(19.5,2.3,'')
     pdf.cell(16.5,2.3,compete)
     pdf.cell(30.5,2.3,'',ln=ln)
+
+def writeURL(personInfo,personlist,progress,ln,pdf, scheduleInfo):
+    pdf.set_font('DejaVu','',6)
+    url = f"competitiongroups.com/competitions/{scheduleInfo.name}"
+    link = f'Online: {url}'
+    pdf.cell(65.8,2.3,link,ln=ln)
 
 def writeHeaderCards(personInfo,personlist,progress,ln,pdf):
     pdf.set_font('DejaVu','',6)
@@ -235,9 +251,11 @@ def eventPatch(personInfo,personlist,progress,event,ln,pdf,mixed={}):
     run = 'Løb:' if personInfo[personlist[progress].name].citizenship == 'DK' else 'Run:'
 
     strlist = sorted([f'{val}' if len(str(val)) ==1 else f'{str(val)[1:]}' for val in personInfo[personlist[progress].name].assignments[event]])
+    # tmp = sorted([f'{val}' for val in personInfo[personlist[progress].name].assignments[event]])
+    # print(personInfo[personlist[progress].name], tmp)
     if strlist:
         if str(strlist[0][0]) in '123456789':
-            sttr = f"{judge} "+', '.join(strlist)
+            sttr = f"{judge} G{', '.join(strlist)}"
         elif strlist[0][0] == 'S':
             sstrlist = [val[1:] for val in strlist]
             sttr = f"{scram} " + ', '.join(sstrlist)
@@ -280,9 +298,14 @@ def compCards(scheduleInfo,personInfo,mixed={}):
             writeNames(personlist,progress,False,pdf)
             writeNames(personlist,progress+1,False,pdf)
             writeNames(personlist,progress+2,True,pdf)
+            writeURL(personInfo,personlist,progress,False,pdf, scheduleInfo)
+            writeURL(personInfo,personlist,progress+1,False,pdf, scheduleInfo)
+            writeURL(personInfo,personlist,progress+2,True,pdf, scheduleInfo)
+
             writeCompeteLine(personInfo,personlist,progress,False,pdf)
             writeCompeteLine(personInfo,personlist,progress+1,False,pdf)
             writeCompeteLine(personInfo,personlist,progress+2,True,pdf)
+
             writeHeaderCards(personInfo,personlist,progress,False,pdf)
             writeHeaderCards(personInfo,personlist,progress+1,False,pdf)
             writeHeaderCards(personInfo,personlist,progress+2,True,pdf)
@@ -294,8 +317,13 @@ def compCards(scheduleInfo,personInfo,mixed={}):
         elif progress+1 < len(personlist):
             writeNames(personlist,progress,False,pdf)
             writeNames(personlist,progress+1,True,pdf)
+
+            writeURL(personInfo,personlist,progress,False,pdf, scheduleInfo)
+            writeURL(personInfo,personlist,progress+1,True,pdf, scheduleInfo)
+
             writeCompeteLine(personInfo,personlist,progress,False,pdf)
             writeCompeteLine(personInfo,personlist,progress+1,True,pdf)
+
             writeHeaderCards(personInfo,personlist,progress,False,pdf)
             writeHeaderCards(personInfo,personlist,progress+1,True,pdf)
             for event in event_list:
@@ -303,7 +331,10 @@ def compCards(scheduleInfo,personInfo,mixed={}):
                 eventPatch(personInfo,personlist,progress+1,event,True,pdf,mixed)
         else:
             writeNames(personlist,progress,True,pdf)
+            writeURL(personInfo,personlist,progress,True,pdf, scheduleInfo)
+
             writeCompeteLine(personInfo,personlist,progress,True,pdf)
+
             writeHeaderCards(personInfo,personlist,progress,True,pdf)
             for event in event_list:
                 eventPatch(personInfo,personlist,progress,event,True,pdf,mixed)
@@ -360,4 +391,93 @@ def getRegList(personInfo):
             pdf.multi_cell(20,line_height,' ',border=1, ln=3)
         pdf.ln(line_height)
     # pdf.output(outfile)
+    return pdf.output(dest='b')
+
+def get_card_height(scheduleInfo,personInfo,mixed={}):
+    pdf = FPDF()
+    pdf.set_top_margin(4.5)
+    pdf.set_left_margin(4.5)
+    pdf.set_auto_page_break(False)
+    pdf.add_page()
+    x = pdf.get_x()
+    y = pdf.get_y()
+    pdf.add_font('DejaVu','', dejavu, uni=True)
+    pdf.add_font('DejaVub','', dejavub, uni=True)
+    pdf.set_font('DejaVu','',7)
+    # personInfo.sort(key=lambda x:x['name'])
+    personlist = [val for val in personInfo.values()]
+    personlist.sort(key=lambda x:x.name)
+    progress = 0
+    event_list = []
+    for event in scheduleInfo.events: # Super ugly but needed due to other ugly code
+        sevent = event[0].split('-')
+        for event_ in sevent:
+            if event_ not in event_list:
+                event_list.append(event_)
+    if pdf.get_y() > 220: # Potentially adjust this based on the amount of events
+        pdf.add_page()
+    writeNames(personlist,progress,True,pdf)
+    writeURL(personInfo,personlist,progress,True,pdf, scheduleInfo)
+
+    writeCompeteLine(personInfo,personlist,progress,True,pdf)
+
+    writeHeaderCards(personInfo,personlist,progress,True,pdf)
+    for event in event_list:
+        eventPatch(personInfo,personlist,progress,event,False,pdf,mixed)
+        eventPatch(personInfo,personlist,progress+1,event,False,pdf,mixed)
+        eventPatch(personInfo,personlist,progress+2,event,True,pdf,mixed)
+    return pdf.get_x(), pdf.get_y()
+
+def get_qr_bytes(compid,personid):
+    img = qrcode.make(f'www.competitiongroups.com/competitions/{compid}/persons/{personid}')
+    image_bytes = BytesIO()
+    img.save(image_bytes, format='PNG')
+    image_bytes.seek(0)
+    return image_bytes
+
+def makeQRPDF(scheduleInfo,personInfo,mixed={}):
+    pdf = FPDF()
+    pdf.set_top_margin(4.5)
+    pdf.set_left_margin(4.5)
+    pdf.set_auto_page_break(False)
+    pdf.add_page()
+    pdf.add_font('DejaVu','', dejavu, uni=True)
+    pdf.set_font('DejaVu','',8)
+    _, card_height = get_card_height(scheduleInfo,personInfo,mixed={})
+    print(f"{'='*20}cardheight:",card_height)
+    personlist = [val for val in personInfo.values()]
+    personlist.sort(key=lambda x:x.name)
+    progress = 0
+    x = pdf.get_x()
+    y = pdf.get_y()
+    while progress < len(personlist):
+        if pdf.get_y() > 220: # Potentially adjust this based on the amount of events
+            pdf.add_page()
+            x = pdf.get_x()
+            y = pdf.get_y()
+        if progress+2 < len(personlist):
+            qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
+            qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
+            qr3 = get_qr_bytes(scheduleInfo.name,personlist[progress+2].id)
+            pdf.set_xy(x, y)
+            pdf.image(qr1,w=65.8,h=card_height)
+            pdf.set_xy(x+65.8, y)
+            pdf.image(qr2,w=65.8,h=card_height)
+            pdf.set_xy(x+(65.8*2), y)
+            pdf.image(qr3,w=65.8,h=card_height)
+        elif progress+1 < len(personlist):
+            qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
+            qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
+            pdf.set_xy(x, y)
+            pdf.image(qr1,w=65.8,h=card_height)
+            pdf.set_xy(x+65.8, y)
+            pdf.image(qr2,w=65.8,h=card_height)
+        elif progress < len(personlist):
+            pdf.set_xy(x, y)
+            qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
+            pdf.image(qr1,w=65.8,h=card_height)
+
+        progress +=3
+        y = pdf.get_y()
+
     return pdf.output(dest='b')

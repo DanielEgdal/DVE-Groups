@@ -36,6 +36,7 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
 
     compPatches = compCards(schedule,people,mixed=mixed)
     reglist = getRegList(people)
+    qrCodes = makeQRPDF(schedule,people,mixed)
     
     scorecardCSV= CSVForScorecards(schedule,people,combined)
     timelimitCSV = CSVForTimeLimits(schedule,combined)
@@ -53,7 +54,7 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     text_log.seek(0)
 
     # It is important that scorecards is the last object in the list.
-    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
+    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}CompCards.pdf",compPatches),(f"{name}Checkinlist.pdf",reglist), (f"{name}QRCodes.pdf", qrCodes), (f"{name}_Blanks.pdf",blanks), (f"logFile.txt",text_log.getvalue().encode('utf-8')), (f"{name}Scorecards.{file_extension}",scorecards)]
     # return pdfOvierview
 
 def existing_groups(wcif,authorized,stages,token):
