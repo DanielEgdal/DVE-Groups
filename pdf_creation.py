@@ -187,7 +187,8 @@ def shortenName(name):
 def writeNames(personlist,progress,ln,pdf):
     pdf.set_font('DejaVuB','',9.2)
     pdf.cell(50,3.2,f'{shortenName(personlist[progress].name)}')
-    pdf.cell(16,3.2,f'ID: {personlist[progress].id}',ln=ln)
+    pdf.cell(16,3.2,f'ID: {personlist[progress].id}')
+    pdf.cell(3,3.2,'',ln=ln)
 
 def writeCompeteLine(personInfo,personlist,progress,ln,pdf):
     pdf.set_font('DejaVu','',6)
@@ -200,7 +201,8 @@ def writeURL(personInfo,personlist,progress,ln,pdf, scheduleInfo):
     pdf.set_font('DejaVu','',6)
     url = f"competitiongroups.com/competitions/{scheduleInfo.name}"
     link = f'Online: {url}'
-    pdf.cell(65.8,2.3,link,ln=ln)
+    pdf.cell(65.8,2.3,link)
+    pdf.cell(3,2.3,'',ln=ln)
 
 def writeHeaderCards(personInfo,personlist,progress,ln,pdf):
     pdf.set_font('DejaVu','',6)
@@ -211,7 +213,8 @@ def writeHeaderCards(personInfo,personlist,progress,ln,pdf):
     pdf.cell(18.5,2,event)
     pdf.cell(7.8,2,group)
     pdf.cell(8,2,table)
-    pdf.cell(31.5,2,helping,ln=ln)
+    pdf.cell(31.5,2,helping)
+    pdf.cell(3,2,'',ln=ln)
 
 def eventPatch(personInfo,personlist,progress,event,ln,pdf,mixed={}):
     translate = {'333':'3x3','222':'2x2','444':'4x4','555':'5x5','666':'6x6','777':'7x7',
@@ -268,7 +271,7 @@ def eventPatch(personInfo,personlist,progress,event,ln,pdf,mixed={}):
         sttr = ', '.join(strlist)
 
     pdf.multi_cell(28,line_height,sttr,border=1, ln=3,align='R')
-    pdf.multi_cell(4,line_height,'',border=0, ln=3)
+    pdf.multi_cell(7,line_height,'',border=0, ln=3)
     if ln:
         pdf.ln(line_height)
 
@@ -423,10 +426,10 @@ def get_card_height(scheduleInfo,personInfo,mixed={}):
 
     writeHeaderCards(personInfo,personlist,progress,True,pdf)
     for event in event_list:
-        eventPatch(personInfo,personlist,progress,event,False,pdf,mixed)
-        eventPatch(personInfo,personlist,progress+1,event,False,pdf,mixed)
-        eventPatch(personInfo,personlist,progress+2,event,True,pdf,mixed)
-    return pdf.get_x(), pdf.get_y()
+        eventPatch(personInfo,personlist,progress,event,True,pdf,mixed)
+    # final_x = pdf.get_x()
+    # pdf.ln( pdf.font_size *1.5)
+    return 4.5+(69*3), pdf.get_y()-2
 
 def get_qr_bytes(compid,personid):
     img = qrcode.make(f'www.competitiongroups.com/competitions/{compid}/persons/{personid}')
@@ -436,15 +439,20 @@ def get_qr_bytes(compid,personid):
     return image_bytes
 
 def makeQRPDF(scheduleInfo,personInfo,mixed={}):
+    """
+    Get a sheet just of the individual QR codes to competition groups to print on the back of the normal comp patches.
+    Note, as you flip the paper, the right and left will become swapped
+    """
     pdf = FPDF()
     pdf.set_top_margin(4.5)
-    pdf.set_left_margin(4.5)
+    pdf.set_left_margin(0)
     pdf.set_auto_page_break(False)
     pdf.add_page()
     pdf.add_font('DejaVu','', dejavu, uni=True)
     pdf.set_font('DejaVu','',8)
-    _, card_height = get_card_height(scheduleInfo,personInfo,mixed={})
-    print(f"{'='*20}cardheight:",card_height)
+    all_cards_width, card_height = get_card_height(scheduleInfo,personInfo,mixed={})
+    width_offset = 68
+    qr_width = 65
     personlist = [val for val in personInfo.values()]
     personlist.sort(key=lambda x:x.name)
     progress = 0
@@ -459,24 +467,25 @@ def makeQRPDF(scheduleInfo,personInfo,mixed={}):
             qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
             qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
             qr3 = get_qr_bytes(scheduleInfo.name,personlist[progress+2].id)
-            pdf.set_xy(x, y)
-            pdf.image(qr1,w=65.8,h=card_height)
-            pdf.set_xy(x+65.8, y)
-            pdf.image(qr2,w=65.8,h=card_height)
-            pdf.set_xy(x+(65.8*2), y)
-            pdf.image(qr3,w=65.8,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*1), y)
+            pdf.image(qr1,w=qr_width,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*2), y)
+            pdf.image(qr2,w=qr_width,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*3),y)
+            pdf.image(qr3,w=qr_width,h=card_height)
         elif progress+1 < len(personlist):
             qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
             qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
-            pdf.set_xy(x, y)
-            pdf.image(qr1,w=65.8,h=card_height)
-            pdf.set_xy(x+65.8, y)
-            pdf.image(qr2,w=65.8,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*1), y)
+            pdf.image(qr1,w=qr_width,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*2), y)
+            pdf.image(qr2,w=qr_width,h=card_height)
         elif progress < len(personlist):
-            pdf.set_xy(x, y)
             qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
-            pdf.image(qr1,w=65.8,h=card_height)
+            pdf.set_xy(all_cards_width-(width_offset*1), y)
+            pdf.image(qr1,w=qr_width,h=card_height)
 
+        pdf.ln(3)
         progress +=3
         y = pdf.get_y()
 
