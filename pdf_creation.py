@@ -200,7 +200,7 @@ def writeCompeteLine(personInfo,personlist,progress,ln,pdf):
 def writeURL(personInfo,personlist,progress,ln,pdf, scheduleInfo):
     pdf.set_font('DejaVu','',6)
     url = f"competitiongroups.com/competitions/{scheduleInfo.name}"
-    link = f'Online: {url}'
+    link = f'{url}'
     pdf.cell(65.8,2.3,link)
     pdf.cell(3,2.3,'',ln=ln)
 
