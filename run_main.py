@@ -11,7 +11,7 @@ from make_groups import *
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = False,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True):
+def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = False,differentColours=False,mixed={},fixed=False,customGroups={},combined=None,just1GroupofBigBLD=True,scramblerCount=2):
     text_log = io.StringIO()
     text_log.write(f"Generated with {stations} stations.\n")
 
@@ -25,7 +25,7 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
 
     print(text_log.getvalue())
 
-    reassignJudges(schedule,people,text_log,fixed,mixed=mixed,stages=stages) # This part probably needs to be fixed as well for the combined events
+    reassignJudges(schedule,people,text_log,fixed,mixed=mixed,stages=stages, scramlersPerStage=scramblerCount) # This part probably needs to be fixed as well for the combined events
 
     name = schedule.name
     # manuCsv = convertCSV(schedule,people,f'{target}/{name}Groups.csv',combined=combined)
@@ -64,6 +64,7 @@ def existing_groups(wcif,authorized,stages,token):
     reglist = getRegList(people)
 
     people, schedule, max_station, requires_patch = readExistingAssignments(wcif,authorized)
+    qrCodes = makeQRPDF(schedule,people,mixed={})
 
     file_extension = 'pdf' if stages == 1 else 'zip'
     # if stations%stages != 0:
@@ -84,4 +85,4 @@ def existing_groups(wcif,authorized,stages,token):
     text_log.seek(0)
 
     
-    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}Checkinlist.pdf",reglist),(f"logFile.txt",text_log.getvalue().encode('utf-8')),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]
+    return [(f"{name}GroupOverview.pdf",pdfOvierview),(f"{name}Checkinlist.pdf",reglist), (f"{name}QRCodes.pdf", qrCodes), (f"logFile.txt",text_log.getvalue().encode('utf-8')),(f"{name}CompCards.pdf",compPatches),(f"{name}_Blanks.pdf",blanks),(f"{name}Scorecards.{file_extension}",scorecards)]

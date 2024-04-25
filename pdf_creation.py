@@ -452,7 +452,8 @@ def makeQRPDF(scheduleInfo,personInfo,mixed={}):
     pdf.set_font('DejaVu','',8)
     all_cards_width, card_height = get_card_height(scheduleInfo,personInfo,mixed={})
     width_offset = 68
-    qr_width = 65
+    qr_square = min(card_height,65)
+    all_cards_width += (65 - qr_square) / 2
     personlist = [val for val in personInfo.values()]
     personlist.sort(key=lambda x:x.name)
     progress = 0
@@ -468,22 +469,22 @@ def makeQRPDF(scheduleInfo,personInfo,mixed={}):
             qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
             qr3 = get_qr_bytes(scheduleInfo.name,personlist[progress+2].id)
             pdf.set_xy(all_cards_width-(width_offset*1), y)
-            pdf.image(qr1,w=qr_width,h=card_height)
+            pdf.image(qr1,w=qr_square,h=qr_square)
             pdf.set_xy(all_cards_width-(width_offset*2), y)
-            pdf.image(qr2,w=qr_width,h=card_height)
+            pdf.image(qr2,w=qr_square,h=qr_square)
             pdf.set_xy(all_cards_width-(width_offset*3),y)
-            pdf.image(qr3,w=qr_width,h=card_height)
+            pdf.image(qr3,w=qr_square,h=qr_square)
         elif progress+1 < len(personlist):
             qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
             qr2 = get_qr_bytes(scheduleInfo.name,personlist[progress+1].id)
             pdf.set_xy(all_cards_width-(width_offset*1), y)
-            pdf.image(qr1,w=qr_width,h=card_height)
+            pdf.image(qr1,w=qr_square,h=qr_square)
             pdf.set_xy(all_cards_width-(width_offset*2), y)
-            pdf.image(qr2,w=qr_width,h=card_height)
+            pdf.image(qr2,w=qr_square,h=qr_square)
         elif progress < len(personlist):
             qr1 = get_qr_bytes(scheduleInfo.name,personlist[progress].id)
             pdf.set_xy(all_cards_width-(width_offset*1), y)
-            pdf.image(qr1,w=qr_width,h=card_height)
+            pdf.image(qr1,w=qr_square,h=qr_square)
 
         pdf.ln(3)
         progress +=3

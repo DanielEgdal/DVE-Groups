@@ -271,7 +271,7 @@ def assignJudges(scheduleInfo:Schedule,personInfo,text_log,fixedSeating= True,do
                     judgePQNonOverlap(event[0],scheduleInfo,personInfo,text_log,fixedSeating)
 
 
-def reassignJudges(scheduleInfo,personInfo,text_log,fixedJudges=True, mixed={},stages=1):
+def reassignJudges(scheduleInfo,personInfo,text_log,fixedJudges=True, mixed={},stages=1, scramlersPerStage=3):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join(script_dir, 'sblacklist.txt')
     blacklist = set()
@@ -285,13 +285,13 @@ def reassignJudges(scheduleInfo,personInfo,text_log,fixedJudges=True, mixed={},s
         scheduleInfo.groupRunners[event] = {}
         if mixed:
             if event in mixed:
-                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,True,stages)
+                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,True,stages, scramlersPerStage)
             else:
-                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,False,stages)
+                reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,False,stages, scramlersPerStage)
         else:
-            reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,fixedJudges,stages)
+            reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist,fixedJudges,stages, scramlersPerStage)
 
-def reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist = {None},fixedJudges=True,stages=1):
+def reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist = {None},fixedJudges=True,stages=1, scramlersPerStage=3):
     for groupNum in scheduleInfo.groups[event]:
             scheduleInfo.groupScramblers[event][groupNum] = []
             scheduleInfo.groupRunners[event][groupNum] = []
@@ -317,7 +317,7 @@ def reassignJudgesEvents(event,scheduleInfo,personInfo,text_log,blacklist = {Non
                         reassignToScrambler(event,groupNum,scheduleInfo,personInfo,text_log, blacklist,fixedJudges)
                         
                         # Just scramblers, continue until you have enough
-                        scramblersNeeded = determineScrambleCount(scheduleInfo,personInfo,event,groupNum, stages)
+                        scramblersNeeded = determineScrambleCount(scheduleInfo,personInfo,event,groupNum, stages, scramlersPerStage)
                         while scramblersNeeded> len(scheduleInfo.groupScramblers[event][groupNum]) and len(scheduleInfo.groupJudges[event][groupNum]) > 1:
                             # scrmbler stuff
                             reassignToScrambler(event,groupNum,scheduleInfo,personInfo, text_log,blacklist,fixedJudges)
@@ -423,7 +423,7 @@ def reassignToScrambler(event,group,scheduleInfo,personInfo,text_log,blacklist =
             if assignment == group:
                 personInfo[scrambler].assignments[event][idx] = f';S{group}'
 
-def determineScrambleCount(scheduleInfo,personInfo,event,groupNum,stages):
+def determineScrambleCount(scheduleInfo,personInfo,event,groupNum,stages, scramlersPerStage):
     judgeCount = len(scheduleInfo.groupJudges[event][groupNum])
     groupSize = len(scheduleInfo.groups[event][groupNum])
     if event == '333bf':
@@ -431,9 +431,9 @@ def determineScrambleCount(scheduleInfo,personInfo,event,groupNum,stages):
     else:
         # scramblers = round(groupSize/3)
         if stages > 2:
-            scramblers = stages*2
+            scramblers = stages*scramlersPerStage
         else:
-            scramblers = 4
+            scramblers = scramlersPerStage
         # if groupSize <= 13:
         # 	scramblers = 2
         # else:

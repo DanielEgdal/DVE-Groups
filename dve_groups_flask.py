@@ -126,6 +126,7 @@ def generate_n_download(compid):
                 form_data = request.form
                 session['stations'] = int(escape(form_data["stations"]))
                 session['stages'] = int(escape(form_data["stages"]))
+                session['scramblers'] = int(escape(form_data["scramblers"]))
                 session['combinedEvents'] = escape(form_data["combinedEvents"]).strip().lower()
                 session['eventGroups'] = escape(form_data["eventGroups"]).strip().lower()
                 if not session['combinedEvents']:
@@ -149,12 +150,12 @@ def generate_n_download(compid):
                 if session['canAdminComp']:
                     wcif,statusCode =  getWcif(compid,session['token'])
                     session['postToWCIF'] = True if request.form.getlist("postToWCIF") else False
-                    pdfs_to_user = callAll(wcif,header= session['token'],customGroups=session['eventGroups'],stations=session['stations'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
+                    header_tmp = session['token']
                 else:
                     wcif,statusCode =  getWCIFPublic(compid)
                     session['postToWCIF']  = False
-                    pdfs_to_user = callAll(wcif,header= None,stations=session['stations'],customGroups=session['eventGroups'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'])
-                
+                    header_tmp = None
+                pdfs_to_user = callAll(wcif,header=header_tmp,stations=session['stations'],customGroups=session['eventGroups'],authorized=session['canAdminComp'], stages=session['stages'], postWCIF=session['postToWCIF'],allCombinedEvents=session['combinedEvents'],scramblerCount=session['scramblers'])
                 
                 
                 if session['stages'] > 1: # This is because scorecards might be stored as zip. Rest of files is done below.
