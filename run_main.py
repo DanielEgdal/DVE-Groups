@@ -48,7 +48,12 @@ def callAll(data,header,stations,authorized,stages,allCombinedEvents,postWCIF = 
     if stations%stages != 0:
         text_log.write("The amount of stages is not a valid devisor for your stations. There might be a bug. \n")
     per_stage = int(stations/stages)
-    scorecards = genScorecards(scorecardCSV,timelimitCSV,schedule.longName,stages,per_stage,False) 
+
+    sort_by_name = False
+    if allCombinedEvents[0]:
+        if allCombinedEvents[0][0] == 'all':
+            sort_by_name=True
+    scorecards = genScorecards(scorecardCSV,timelimitCSV,schedule.longName,stages,per_stage,sort_by_name=sort_by_name) 
     blanks = getBlanks(schedule.longName)
 
     text_log.seek(0)
