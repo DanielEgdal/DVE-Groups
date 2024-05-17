@@ -197,7 +197,8 @@ def getGroupCount(scheduleInfo:Schedule,fixedSeating,stationCount,custom=[False]
                 createDictRound(scheduleInfo,event)
                 for amount in range(1,max([ceil(len(scheduleInfo.eventCompetitors[event])/stationCount) +1,3])):
                     createDictGroup(scheduleInfo,event,amount)
-    if scheduleInfo.allCombinedEvents[0]:
+    
+    if scheduleInfo.allCombinedEvents:
         for setOfEvents in scheduleInfo.allCombinedEvents:
             competitorsInSet = combineCompetitors(scheduleInfo,setOfEvents)
             for event in setOfEvents:
@@ -324,17 +325,18 @@ def scheduleBasicInfo(data,personInfo,organizers,delegates,stations,stages,fixed
     # 	schedule.events += tempFm
     # else:
     # 	schedule.unpred.add("333fm")
-    if allCombinedEvents == 'all':
-        schedule.allCombinedEvents.append(list(set(schedule.eventWOTimes)))
-    else:
-        for setOfEvents in allCombinedEvents:
-            for event in setOfEvents:
-                if event in set(schedule.eventWOTimes):
-                    pass
-                else:
-                    raise ValueError('Non-hosted event name entered as a combined event')
-            # newSetOfEvent = [event.unescape() for event in setOfEvents]
-            schedule.allCombinedEvents.append(setOfEvents)
+    if allCombinedEvents[0]: # That there is actually some user input for combining events
+        if allCombinedEvents[0][0] == 'all':
+            schedule.allCombinedEvents.append(list(set(schedule.eventWOTimes)))
+        else:
+            for setOfEvents in allCombinedEvents:
+                for event in setOfEvents:
+                    if event in set(schedule.eventWOTimes):
+                        pass
+                    else:
+                        raise ValueError('Non-hosted event name entered as a combined event')
+                # newSetOfEvent = [event.unescape() for event in setOfEvents]
+                schedule.allCombinedEvents.append(setOfEvents)
     schedule.extractSetOfCombinedEvents()
     schedule.order() # Order the events by time in schedule
     schedule.getDaySplit() # See which events are each day
