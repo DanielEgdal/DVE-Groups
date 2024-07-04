@@ -114,7 +114,14 @@ def createChildActivityWCIF(data,scheduleInfo):
                         scheduleInfo.childActivityMapping[eventSplit[0]][groupNum] =childIdCounter
                         childIdCounter += 1
                         data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['childActivities'][gid]['name'] = f"{data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['name']}, Round 1 Group {groupNum}"
-                        data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['childActivities'][gid]['activityCode'] = f"{data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['activityCode']}-g{groupNum}"
+                        if eventt[:6] == '333mbf':
+                            activityCodeSplit = f"{data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['activityCode']}".split('-')
+                            activityCode = "-".join(activityCodeSplit[:-1])
+                            attempt = activityCodeSplit[-1]
+                            activityCode = f"{activityCode}-g{groupNum}-{attempt}"
+                        else:
+                            activityCode = f"{data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['activityCode']}-g{groupNum}"
+                        data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['childActivities'][gid]['activityCode'] = activityCode
                         startTime = str(scheduleInfo.groupTimes[eventt][groupNum][0].tz_convert(pytz.utc).to_datetime64()).split('.')[0]+'Z'
                         endTime = str(scheduleInfo.groupTimes[eventt][groupNum][1].tz_convert(pytz.utc).to_datetime64()).split('.')[0]+'Z'
                         data['schedule']['venues'][vid]['rooms'][rid]['activities'][aid]['childActivities'][gid]['startTime'] = startTime
