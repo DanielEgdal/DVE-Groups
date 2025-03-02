@@ -90,7 +90,7 @@ def comp_page(compid):
     fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
     escapedCompid = escape(compid)
     if len(escapedCompid) <= 32:
-        pattern = re.compile("^[a-zA-Z\d]+$")
+        pattern = re.compile(r"^[a-zA-Z\d]+$")
         if pattern.match(escapedCompid):
             if 'token' in session:
                 wcif,statusCode =  getWcif(compid,session['token'])
@@ -120,7 +120,7 @@ def generate_n_download(compid):
     fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
     escapedCompid = escape(compid)
     if len(escapedCompid) <= 32:
-        pattern = re.compile("^[a-zA-Z\d]+$")
+        pattern = re.compile(r"^[a-zA-Z\d]+$")
         if pattern.match(escapedCompid):
             if request.method == 'POST':
                 form_data = request.form
@@ -181,7 +181,7 @@ def existing_groups_flask(compid):
     fail_string = "The ID you have hardcoded into the URL doesn't match a valid format of a competition url."
     escapedCompid = escape(compid)
     if len(escapedCompid) <= 32:
-        pattern = re.compile("^[a-zA-Z\d]+$")
+        pattern = re.compile(r"^[a-zA-Z\d]+$")
         if pattern.match(escapedCompid):
             if session['canAdminComp']:
                 wcif,statusCode =  getWcif(compid,session['token'])

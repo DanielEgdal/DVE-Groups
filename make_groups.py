@@ -1,4 +1,4 @@
-from math import ceil
+from math import ceil, floor
 from copy import deepcopy
 from collections import Counter
 from schedule import Schedule,combineCompetitors
@@ -8,8 +8,9 @@ from overlap_groups import *
 
 def specialPeopleCompeteAssign(specialCompList,p2,personInfo,event,groups):
     specialCompList.sort(key=lambda x:personInfo[x].prs[event],reverse=True)
-    while specialCompList:
-        for i in range(len(groups),0,-1):
+    perGroup = ceil(len(specialCompList)/len(groups))
+    for i in range(len(groups),0,-1):
+        for _ in range(perGroup):
             if specialCompList:
                 comp = specialCompList.pop()
                 groups[i].append(comp)

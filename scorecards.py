@@ -96,6 +96,7 @@ def CSVForTimeLimits(scheduleInfo,combined):
     return header
 
 def genScorecards(groups,tls,compname,no_stages,am_stages,sort_by_name):
+    am_stages = 100 if no_stages == 1 else am_stages # The external program does not need the stations if there is just one stage. This prevents a bug
     fileAnker = anker_scorecards(groups,tls,compname,no_stages,am_stages,sort_by_name)
     return bytearray(fileAnker)
 

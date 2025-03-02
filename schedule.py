@@ -71,7 +71,7 @@ class Schedule():
             diff = self.eventTimes[event][1] - self.eventTimes[event][0]
             perGroup = diff/amountOfGroups
             for groupNum in self.groups[event]:
-                self.groupTimes[event][groupNum] = ((self.eventTimes[event][0]+ (perGroup*(groupNum-1))).round(freq='S'),(self.eventTimes[event][0]+ (perGroup*(groupNum))).round(freq='S'))
+                self.groupTimes[event][groupNum] = ((self.eventTimes[event][0]+ (perGroup*(groupNum-1))).round(freq='s'),(self.eventTimes[event][0]+ (perGroup*(groupNum))).round(freq='s'))
                 # self.groupTimes[event][groupNum] = ("tid 1", "tid 2")
 
     def getSubSeqGroupTimes(self):
