@@ -51,7 +51,7 @@ def splitNonOverlapGroups(scheduleInfo,personInfo,event,fixed=True):
         orgaCompetitors = [compOrga for compOrga in scheduleInfo.organizers if compOrga in totalComp and compOrga not in scheduleInfo.delegates]
     else:
         orgaCompetitors = [compOrga for compOrga in scheduleInfo.organizers if compOrga in totalComp and compOrga]
-    if len(orgaCompetitors) > 1 and len(groups) > 1:
+    if len(orgaCompetitors) > 1 and len(groups) > 1 and event not in ('333bf','444','555','666','777','minx'):
         specialPeopleCompeteAssign(orgaCompetitors,p2,personInfo,event,groups)
 
     # Regular assigning now
@@ -59,6 +59,7 @@ def splitNonOverlapGroups(scheduleInfo,personInfo,event,fixed=True):
         for groupNum in range(1,len(groups)+1):
             while len(groups[groupNum]) < perGroup and len(p2) > 0: # Assigning slowest first
                 p2 = popCompetitorAssign(p2,groups,personInfo,event,groupNum,False)
+            groups[groupNum].sort(key=lambda x:personInfo[x].prs[event])
     else:
         for groupNum in range(len(groups),0,-1): # taking best people, to ensure there are scramblers later (not all fast in same group)
             for _ in range(1,scramblerCount+1):
