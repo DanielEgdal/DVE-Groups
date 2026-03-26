@@ -356,8 +356,6 @@ def headerRegList(pdf):
     pdf.multi_cell(10,line_height,"Land",border=1, ln=3)
     pdf.multi_cell(7,line_height,"Køn",border=1, ln=3)
     pdf.multi_cell(18,line_height,"Fødselsdato",border=1, ln=3)
-    pdf.multi_cell(9,line_height,'DSF?',border=1, ln=3)
-    pdf.multi_cell(20,line_height,'Postnummer',border=1, ln=3)
     pdf.ln(line_height)
     pdf.cell(65,6,'',ln=True)
 
@@ -368,8 +366,6 @@ def getRegList(personInfo):
     pdf.set_font('DejaVu','',8)
     pdf.cell(65,6,f'Indtjekning: Deltagere som ikke er nye er der intet specielt ved, bare sæt flueben ved dem når de ankommer.',ln=True)
     pdf.cell(65,6,f'Nye deltagere er der hvor du skal fokusere. Bed om ID (hvor man kan se nationalitet), og tjek at alt information passer.',ln=True)
-    pdf.cell(65,6,f'Hvis personen er dansk statsborger eller bor i DK, skal du spørge dem om de vil være medlem af DSF (gratis), og om deres postnummer.',ln=True)
-    pdf.cell(65,6,f'Postnummer er valgfrit og skal kun bruges hvis de vil være medlem af DSF.',ln=True)
     line_height = pdf.font_size *2.6
     col_width = pdf.epw / 9
     personlist = [val for val in personInfo.values()]
@@ -390,8 +386,6 @@ def getRegList(personInfo):
             pdf.multi_cell(10,line_height,person.citizenship,border=1, ln=3)
             pdf.multi_cell(7,line_height,person.gender,border=1, ln=3)
             pdf.multi_cell(18,line_height,person.dob,border=1, ln=3)
-            pdf.multi_cell(9,line_height,' ',border=1, ln=3)
-            pdf.multi_cell(20,line_height,' ',border=1, ln=3)
         pdf.ln(line_height)
     # pdf.output(outfile)
     return pdf.output(dest='b')
