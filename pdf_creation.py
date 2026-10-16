@@ -482,6 +482,6 @@ def makeQRPDF(scheduleInfo,personInfo,mixed={}):
 
         pdf.ln(3)
         progress +=3
-        y += card_heigth
+        y += card_height
 
     return pdf.output(dest='b')
